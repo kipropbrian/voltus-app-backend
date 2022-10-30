@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PersonController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -20,5 +22,7 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::resource('person', PersonController::class)->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';

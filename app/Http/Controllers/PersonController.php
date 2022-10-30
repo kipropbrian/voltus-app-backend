@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Person;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class PersonController extends Controller
 {
@@ -14,7 +16,10 @@ class PersonController extends Controller
      */
     public function index()
     {
-        //
+        //Get all
+        return view('person.index', [
+            'people' => Person::latest()->paginate(10),
+        ]);
     }
 
     /**
@@ -47,6 +52,9 @@ class PersonController extends Controller
     public function show(Person $person)
     {
         //
+        return view('person.show', [
+            'person' => $person
+        ]);
     }
 
     /**
@@ -58,6 +66,9 @@ class PersonController extends Controller
     public function edit(Person $person)
     {
         //
+        return view('person.edit', [
+            'person' => $person
+        ]);
     }
 
     /**
@@ -70,6 +81,18 @@ class PersonController extends Controller
     public function update(Request $request, Person $person)
     {
         //
+        $validated = $request->validate([
+            'name' => 'required|max:255',
+            'email' => 'required',
+            'gender' => 'required',
+            'image' => 'nullable|string',
+            'about' => 'required|max:255'
+        ]);
+       
+
+        $person->update($validated);
+
+        return redirect(route('person.index'));
     }
 
     /**
