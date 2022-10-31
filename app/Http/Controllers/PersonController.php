@@ -6,6 +6,7 @@ use App\Models\Person;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class PersonController extends Controller
 {
@@ -85,11 +86,17 @@ class PersonController extends Controller
             'name' => 'required|max:255',
             'email' => 'required',
             'gender' => 'required',
-            'image' => 'nullable|string',
-            'about' => 'required|max:255'
+            'about' => 'required|max:255',
+            'image' => 'nullable|mimes:jpg,jpeg,png|max:2048'
         ]);
-       
 
+        //store file on cloudinary
+        if ($request->hasFile('image')){
+            $result = $request->image->storeOnCloudinary('voltus');
+            $validated['image_url'] = $result->getPath();
+            Log::channel('stderr')->info('Image '. $result->getFileName(). ' saved on cloudinary! on URL '. $result->getPath());
+        }
+       
         $person->update($validated);
 
         return redirect(route('person.index'));

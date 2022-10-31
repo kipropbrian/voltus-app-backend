@@ -50,8 +50,8 @@
                                     <dt class="text-sm font-medium text-gray-500">
                                         Image
                                     </dt>
-                                    <div class="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
-                                        <img src="https://randomuser.me/api/portraits/women/70.jpg" alt="Front of men&#039;s Basic Tee in black." class="h-full w-full object-cover object-center lg:h-full lg:w-full">
+                                    <div x-data="{ img:'{{ $person->image_url }}'}" class="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
+                                        <img :src="img ? img : '/blank-person-612x612.jpeg' " alt="Politician image" class="h-full w-full object-cover object-center lg:h-full lg:w-full">
                                     </div>
                                     <br />
                                 </div>

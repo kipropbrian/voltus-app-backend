@@ -14,12 +14,12 @@
                         </div>
                         
                         <div class="border-t border-gray-200">
-                            <form  method="POST" action="{{ route('person.update', $person) }}">
+                            <form  method="POST" action="{{ route('person.update', $person) }}" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 <div class="overflow-hidden shadow sm:rounded-md">
                                     <div class="bg-white px-4 py-5 sm:p-6">
-                                        <div class="grid grid-cols-6 gap-6">
+                                        <div class="grid grid-cols-6 gap-6" x-data="{src: '{{ old('image', $person->image_url) }}'}">
                                             <div class="col-span-6 sm:col-span-3">
                                                 <label for="full-names"
                                                     class="block text-sm font-medium text-gray-700">Full names</label>
@@ -36,7 +36,7 @@
                                                 <input type="text" name="email" id="email"
                                                     autocomplete="email"
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
-                                                    value="{{ old('email', $person->email) }}" />
+                                                    value="{{ old('email', $person) }}" />
                                                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                                             </div>
 
@@ -48,8 +48,9 @@
                                                 </select>
                                                 <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                                             </div>
-                                  
-                                            <div  class="col-span-6 sm:col-span-4">
+                                            
+                                            
+                                            <div class="col-span-6 sm:col-span-4">
                                                 <label class="block text-sm font-medium text-gray-700">Cover photo</label>
                                                 <div class="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
                                                     <div class="space-y-1 text-center">
@@ -59,8 +60,9 @@
                                                         <div class="flex text-sm text-gray-600">
                                                             <label for="image" class="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500">
                                                             <span>Upload a file</span>
-                                                            <input id="image" name="image" type="file" class="sr-only">
+                                                            <input id="image" name="image" type="file" class="sr-only" @change="src = URL.createObjectURL(event.target.files[0])">
                                                             </label>
+                                                            
                                                             <p class="pl-1">or drag and drop</p>
                                                         </div>
                                                         <p class="text-xs text-gray-500">PNG or JPG up to 2MB</p>
@@ -71,7 +73,7 @@
 
                                             <div  class="col-span-6 sm:col-span-4">
                                                 <figure class="max-w-lg">
-                                                    <img class="max-w-full h-auto rounded-lg" src="/blank-person-612x612.jpeg" alt="image description">
+                                                    <img class="max-w-full h-auto rounded-lg" :src="src ? src : '/blank-person-612x612.jpeg' " alt="image description">
                                                     <figcaption class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">{{ old('name', $person->name)}}</figcaption>
                                               </figure>
                                             </div>
