@@ -17,12 +17,12 @@
                             </tr>
                         </thead>
                         @foreach ($people as $person)
-                        <tbody class="text-gray-600 text-sm font-light">
+                        <tbody x-data="{ src: '{{ $person->gender == 'Male' ? '/man-icon.png' : '/woman-icon.png' }}' }" class="text-gray-600 text-sm font-light">
                             <tr class="border-b border-gray-200 hover:bg-gray-100">
                                 <td class="py-3 px-6 text-left whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="mr-2">
-                                            <img class="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/{{ rand(2,50)}}.jpg"/>
+                                            <img class="w-6 h-6 rounded-full" :src="src" />
                                         </div>
                                         <span class="font-medium">{{ $person->name }}</span>
                                     </div>

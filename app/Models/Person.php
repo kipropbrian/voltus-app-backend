@@ -15,4 +15,20 @@ class Person extends Model
      * @var array
      */
     protected $fillable = ['name', 'email', 'image_url', 'about', 'gender'];
+
+    /**
+     * Get the pictures for the person
+     */
+    public function images()
+    {
+        return $this->hasMany(Image::class);
+    }
+
+    /**
+     * Get the person's most recent image.
+     */
+    public function latestImage()
+    {
+        return $this->hasOne(Image::class)->latestOfMany();
+    }
 }

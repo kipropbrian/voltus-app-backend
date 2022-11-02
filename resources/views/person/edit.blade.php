@@ -19,10 +19,10 @@
                                 @method('PUT')
                                 <div class="overflow-hidden shadow sm:rounded-md">
                                     <div class="bg-white px-4 py-5 sm:p-6">
-                                        <div class="grid grid-cols-6 gap-6" x-data="{src: '{{ old('image', $person->image_url) }}'}">
+                                        <div class="grid grid-cols-6 gap-6" x-data="{src: '{{ $person->latestImage ? $person->latestImage->image_url_secure : '' }}'}">
                                             <div class="col-span-6 sm:col-span-3">
                                                 <label for="full-names"
-                                                    class="block text-sm font-medium text-gray-700">Full names</label>
+                                                    class="block text-sm font-medium text-gray-700">Full names </label>
                                                 <input type="text" name="name" id="full-names"
                                                     autocomplete="given-name"
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 

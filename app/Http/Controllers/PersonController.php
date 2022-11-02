@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Person;
+use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PersonController extends Controller
 {
@@ -93,11 +95,27 @@ class PersonController extends Controller
         //store file on cloudinary
         if ($request->hasFile('image')){
             $result = $request->image->storeOnCloudinary('voltus');
-            $validated['image_url'] = $result->getPath();
             Log::channel('stderr')->info('Image '. $result->getFileName(). ' saved on cloudinary! on URL '. $result->getPath());
+
+            $image = new Image;
+            $image->uuid = Str::uuid();
+            $image->image_url = $result->getPath();
+            $image->image_url_secure =  $result->getSecurePath();
+            $image->size = $result->getReadableSize();
+            $image->filetype = $result->getFileType();
+            $image->originalFilename = $result->getOriginalFileName();
+            $image->publicId = $result->getPublicId();
+            $image->extension = $result->getExtension();  
+            $image->width = $result->getWidth();
+            $image->height = $result->getHeight();
+            $image->timeUploaded = $result->getTimeUploaded();
+
+            $person->images()->save($image);
+            Log::channel('stderr')->info('Image saved and attached to person');
         }
-       
+
         $person->update($validated);
+        Log::channel('stderr')->info('Person info updated');
 
         return redirect(route('person.index'));
     }
