@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PersonSeeder::class,
+            FacesetSeeder::class,
             ImageSeeder::class
         ]);
     }

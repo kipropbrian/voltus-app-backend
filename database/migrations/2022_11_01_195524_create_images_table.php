@@ -27,6 +27,8 @@ return new class extends Migration
             $table->string('height');
             $table->string('timeUploaded');
             $table->foreignId('person_id')->constrained();
+            $table->foreignId('faceset_id')->constrained();
+            $table->string('face_token')->nullable();
             $table->timestamps();
         });
     }
