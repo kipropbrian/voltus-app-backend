@@ -17,7 +17,7 @@
                             </tr>
                         </thead>
                         @foreach ($people as $person)
-                        <tbody x-data="{ src: '{{ $person->gender == 'Male' ? '/man-icon.png' : '/woman-icon.png' }}' }" class="text-gray-600 text-sm font-light">
+                        <tbody x-data="{ src: '{{ $person->gender == 'Male' ? '/icons/man-icon.png' : '/icons/woman-icon.png' }}' }" class="text-gray-600 text-sm font-light">
                             <tr class="border-b border-gray-200 hover:bg-gray-100">
                                 <td class="py-3 px-6 text-left whitespace-nowrap">
                                     <div class="flex items-center">

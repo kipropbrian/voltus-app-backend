@@ -56,7 +56,7 @@ class PersonController extends Controller
     public function show(Person $person, FacePlusClient $fp)
     {
 
-        $response = $fp->searchFace(['image_url' => $person->latestImage->image_url]);
+        // $response = $fp->searchFace(['image_url' => $person->latestImage->image_url]);
 
         return view('person.show', [
             'person' => $person

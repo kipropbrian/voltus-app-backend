@@ -67,6 +67,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="flex flex-row mt-6 p-6 bg-white shadow-sm rounded-lg divide-y">
+                    @foreach ($person->images as $image)
+                        <x-ImageDetect :image="$image"/>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
