@@ -80,6 +80,13 @@ class ImageController extends Controller
      */
     public function destroy(Image $image)
     {
-        //
+        // //Soft delete from db
+        try {
+            $image->delete();
+            return back()->with('status', 'Image has been deleted! ');
+        } catch (\Exception $e) {
+            return back()->with('status', 'There was a problem! ');
+        }
+        //remove from face set if set.
     }
 }

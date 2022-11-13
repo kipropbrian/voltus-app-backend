@@ -27,9 +27,10 @@ return new class extends Migration
             $table->string('height');
             $table->string('timeUploaded');
             $table->foreignId('person_id')->constrained();
-            $table->foreignId('faceset_id')->constrained();
+            $table->foreignId('faceset_id')->nullable()->constrained();
             $table->string('face_token')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -41,5 +42,6 @@ return new class extends Migration
     public function down()
     {
         Schema::dropIfExists('images');
+        Schema::dropIfExists('facesets');
     }
 };

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\FacePlusController;
+use App\Http\Controllers\ImageController;
 
 
 /*
@@ -27,5 +28,6 @@ Route::get('/dashboard', function () {
 Route::resource('person', PersonController::class)->middleware(['auth', 'verified']);
 
 Route::get('/person/{person}/image/{image}', [FacePlusController::class, 'getFaceTokenAddFacesetSetUserID']);
+Route::resource('image', ImageController::class)->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';

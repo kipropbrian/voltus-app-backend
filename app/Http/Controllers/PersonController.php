@@ -86,7 +86,7 @@ class PersonController extends Controller
      */
     public function update(Request $request, Person $person)
     {
-        //
+        //TODO: Rollback on failure
         $validated = $request->validate([
             'name' => 'required|max:255',
             'email' => 'required',
@@ -108,7 +108,7 @@ class PersonController extends Controller
             $image->filetype = $result->getFileType();
             $image->originalFilename = $result->getOriginalFileName();
             $image->publicId = $result->getPublicId();
-            $image->extension = $result->getExtension();  
+            $image->extension = $result->getExtension();
             $image->width = $result->getWidth();
             $image->height = $result->getHeight();
             $image->timeUploaded = $result->getTimeUploaded();
