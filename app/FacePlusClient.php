@@ -1,8 +1,8 @@
 <?php
 /**
  * Sections are from https://github.dev/FacePlusPlus/facepp-php-sdk
- * 
- * */ 
+ *
+ * */
 
 namespace App;
 
@@ -10,7 +10,7 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
-class FacePlusClient 
+class FacePlusClient
 {
      // Server URL in china is api-cn.faceplusplus.com, and in others is api-us.faceplusplus.com
     protected $host;
@@ -55,7 +55,7 @@ class FacePlusClient
         $allOptions = array_merge($creds, $options);
 
         //Send post request to faceplus host
-        $response = Http::dd()->asForm()->post($url, $allOptions);
+        $response = Http::acceptJson()->asForm()->post($url, $allOptions);
 
         Log::channel('stderr')->info($response);
 

@@ -27,7 +27,8 @@ Route::get('/dashboard', function () {
 
 Route::resource('person', PersonController::class)->middleware(['auth', 'verified']);
 
-Route::get('/person/{person}/image/{image}', [FacePlusController::class, 'getFaceTokenAddFacesetSetUserID']);
+Route::get('faceplus/{image}', [FacePlusController::class, 'getFaceTokenAddFacesetSetUserID'])->name('faceplus.connect');
+
 Route::resource('image', ImageController::class)->middleware(['auth', 'verified']);
 
 require __DIR__.'/auth.php';

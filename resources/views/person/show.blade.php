@@ -46,15 +46,6 @@
                                         {{ $person->uuid }}
                                     </dd>
                                 </div>
-                                <div class="bg-gray-100 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                    <dt class="text-sm font-medium text-gray-500">
-                                        Image
-                                    </dt>
-                                    <div x-data="{ img:'{{ $person->latestImage ? $person->latestImage->image_url_secure : ''  }}'}" class="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
-                                        <img :src="img ? img : '/blank-person-612x612.jpeg' " alt="Politician image" class="h-full w-full object-cover object-center lg:h-full lg:w-full">
-                                    </div>
-                                    <br />
-                                </div>
                                 <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                     <dt class="text-sm font-medium text-gray-500">
                                         About

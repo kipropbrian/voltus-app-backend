@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Person;
 use App\Models\Image;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\FacePlusClient;
@@ -53,11 +51,8 @@ class PersonController extends Controller
      * @param  \App\Models\Person  $person
      * @return \Illuminate\Http\Response
      */
-    public function show(Person $person, FacePlusClient $fp)
+    public function show(Person $person)
     {
-
-        // $response = $fp->searchFace(['image_url' => $person->latestImage->image_url]);
-
         return view('person.show', [
             'person' => $person
         ]);

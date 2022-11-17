@@ -29,6 +29,7 @@ return new class extends Migration
             $table->foreignId('person_id')->constrained();
             $table->foreignId('faceset_id')->nullable()->constrained();
             $table->string('face_token')->nullable();
+            $table->boolean('detected')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
