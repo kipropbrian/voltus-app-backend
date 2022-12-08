@@ -28,6 +28,7 @@ Route::get('/dashboard', function () {
 Route::resource('person', PersonController::class)->middleware(['auth', 'verified']);
 
 Route::get('faceplus/{image}', [FacePlusController::class, 'getFaceTokenAddFacesetSetUserID'])->name('faceplus.connect');
+Route::post('facesearch/', [FacePlusController::class, 'facePlusSearch'])->name('faceplus.search');
 
 Route::resource('image', ImageController::class)->middleware(['auth', 'verified']);
 

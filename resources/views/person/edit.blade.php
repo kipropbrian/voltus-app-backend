@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="overflow-x-auto">
-        <div class="min-w-screen bg-gray-100 flex items-center justify-center bg-gray-100 font-sans overflow-hidden">
+        <div class="min-w-screen bg-gray-100 flex items-center justify-center font-sans overflow-hidden">
             <div class="w-full lg:w-2/3 p-5">
                 <div class="mt-6 bg-white shadow-sm rounded-lg divide-y">
                     <div class="overflow-hidden bg-white shadow sm:rounded-lg">
@@ -12,7 +12,7 @@
                                 Edit Personal details.
                             </p>
                         </div>
-                        
+
                         <div class="border-t border-gray-200">
                             <form  method="POST" action="{{ route('person.update', $person) }}" enctype="multipart/form-data">
                                 @csrf
@@ -25,7 +25,7 @@
                                                     class="block text-sm font-medium text-gray-700">Full names </label>
                                                 <input type="text" name="name" id="full-names"
                                                     autocomplete="given-name"
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                     value="{{ old('name', $person->name)}}" />
                                                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                             </div>
@@ -35,7 +35,7 @@
                                                     class="block text-sm font-medium text-gray-700">Email address</label>
                                                 <input type="text" name="email" id="email"
                                                     autocomplete="email"
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                     value="{{ old('email', $person) }}" />
                                                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                                             </div>
@@ -48,8 +48,8 @@
                                                 </select>
                                                 <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                                             </div>
-                                            
-                                            
+
+
                                             <div class="col-span-6 sm:col-span-4">
                                                 <label class="block text-sm font-medium text-gray-700">Cover photo</label>
                                                 <div class="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
@@ -62,7 +62,7 @@
                                                             <span>Upload a file</span>
                                                             <input id="image" name="image" type="file" class="sr-only" @change="src = URL.createObjectURL(event.target.files[0])">
                                                             </label>
-                                                            
+
                                                             <p class="pl-1">or drag and drop</p>
                                                         </div>
                                                         <p class="text-xs text-gray-500">PNG or JPG up to 2MB</p>
@@ -84,7 +84,7 @@
                                                     About</label>
                                                 <input type="text" name="about" id="about"
                                                     autocomplete="about"
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                                     value="{{ old('about', $person->about )}}" />
                                                     <x-input-error :messages="$errors->get('about')" class="mt-2" />
                                             </div>

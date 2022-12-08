@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use Illuminate\Http\Request;
 
+
 class ImageController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      *
@@ -88,5 +90,7 @@ class ImageController extends Controller
             return back()->with('status', 'There was a problem! ');
         }
         //remove from face set if set.
+
+        //Delete from cloudinary
     }
 }

@@ -7,7 +7,6 @@ use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use App\FacePlusClient;
 
 class PersonController extends Controller
 {
