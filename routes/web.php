@@ -16,20 +16,3 @@ use App\Http\Controllers\ImageController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::resource('person', PersonController::class)->middleware(['auth', 'verified']);
-
-Route::get('faceplus/{image}', [FacePlusController::class, 'getFaceTokenAddFacesetSetUserID'])->name('faceplus.connect');
-Route::post('facesearch/', [FacePlusController::class, 'facePlusSearch'])->name('faceplus.search');
-
-Route::resource('image', ImageController::class)->middleware(['auth', 'verified']);
-
-require __DIR__.'/auth.php';
