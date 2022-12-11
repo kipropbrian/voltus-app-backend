@@ -1,10 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PersonController;
-use App\Http\Controllers\FacePlusController;
-use App\Http\Controllers\ImageController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +12,8 @@ use App\Http\Controllers\ImageController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::get('/', function () {
+    return ['Laravel' => app()->version()];
+});
+
