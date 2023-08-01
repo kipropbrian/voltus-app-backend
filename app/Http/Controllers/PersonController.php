@@ -18,9 +18,7 @@ class PersonController extends Controller
     public function index()
     {
         //Get all
-        return view('person.index', [
-            'people' => Person::latest()->paginate(10),
-        ]);
+        return response()->json(['people' => Person::all ()]);
     }
 
     /**
