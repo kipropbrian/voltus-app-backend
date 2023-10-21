@@ -80,10 +80,12 @@ class FacePlusController extends Controller
         $validated = $request->validate([
             'image' => 'required|mimes:jpg,jpeg,png|max:2048'
         ]);
+        Log::channel('stderr')->info('processing');
 
         //store file on cloudinary
         $image = new Image;
         if ($request->hasFile('image')){
+            Log::notice("Saving on cloudinary");
             $result = $request->image->storeOnCloudinary('voltus');
             Log::channel('stderr')->info('Image '. $result->getFileName(). ' saved on cloudinary! on URL '. $result->getPath());
 

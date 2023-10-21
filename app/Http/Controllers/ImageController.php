@@ -87,12 +87,15 @@ class ImageController extends Controller
      * @param String ImgUrl on Cloudinary
      * @return Json Response() with
      */
-    public function searchOnFp(Image $image)
+    public function searchOnFp(Request $request, Image $image)
     {
+      Log::channel('stderr')->info($request->image);
+
         $faceplus = new FacePlusClient();
         //send to fp and save search details
         $faceSet = Faceset::where('status', 'active')->first();
-        $response = $faceplus->searchFace(['image_file' => $image, 'faceset_token' => $faceSet->faceset_token]); //url
+        Log::channel('stderr')->info($faceSet);
+        $response = $faceplus->searchFace(['image_file' => $request->image, 'faceset_token' => $faceSet->faceset_token]); //url
         $data = $response->object();
 
         if (isset($data->error_message)) {
