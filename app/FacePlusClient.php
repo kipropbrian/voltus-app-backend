@@ -54,7 +54,7 @@ class FacePlusClient
 
         $allOptions = array_merge($creds, $options);
 
-        Log::channel('stderr')->info($allOptions);
+        Log::channel('stderr')->info("FP Post options = | Path -> {$path} | Options -> " . json_encode($allOptions));
 
         //Send post request to faceplus host
         $response = Http::acceptJson()->asForm()->post($url, $allOptions);

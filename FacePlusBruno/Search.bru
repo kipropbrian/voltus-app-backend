@@ -1,0 +1,26 @@
+meta {
+  name: Search
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/facepp/v3/search?api_key={{api_key}}&api_secret={{api_secret}}
+  body: multipartForm
+  auth: none
+}
+
+query {
+  api_key: {{api_key}}
+  api_secret: {{api_secret}}
+}
+
+body:json {
+  {
+    "faceset_token": "5684e0715c69b7a8ee74463841839d6c"
+  }
+}
+
+body:multipart-form {
+  faceset_token: 5684e0715c69b7a8ee74463841839d6c
+}
