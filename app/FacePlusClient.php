@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Sections are from https://github.dev/FacePlusPlus/facepp-php-sdk
  *
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 
 class FacePlusClient
 {
-     // Server URL in china is api-cn.faceplusplus.com, and in others is api-us.faceplusplus.com
+    // Server URL in china is api-cn.faceplusplus.com, and in others is api-us.faceplusplus.com
     protected $host;
 
     // the request key
@@ -33,18 +34,19 @@ class FacePlusClient
      */
     public function __construct()
     {
-        if (!env('FACEPLUS_API_KEY') || !env('FACEPLUS_API_SECRET') || !env('FACEPLUS_API_HOST') ) {
+        if (!env('FACEPLUS_API_KEY') || !env('FACEPLUS_API_SECRET') || !env('FACEPLUS_API_HOST')) {
             throw new Exception("Please ensure your FPP credentials are set before continuing.");
         }
 
-        $this->host = env('FACEPLUS_API_KEY' );
+        $this->host = env('FACEPLUS_API_KEY');
         $this->apiKey = env('FACEPLUS_API_SECRET');
         $this->apiSecret = env('FACEPLUS_API_HOST');
         Log::channel('stderr')->info("Config keys are set up!");
     }
 
 
-    function request($path, $options) {
+    function request($path, $options)
+    {
         $creds = [
             'api_key' => $this->apiKey,
             'api_secret' => $this->apiSecret
@@ -54,12 +56,27 @@ class FacePlusClient
 
         $allOptions = array_merge($creds, $options);
 
-        Log::channel('stderr')->info("FP Post options = | Path -> {$path} | Options -> " . json_encode($allOptions));
+        Log::channel('stderr')->info("FP Post options => | Path -> {$path} | Options -> " . json_encode($allOptions));
+        Log::channel('stderr')->info('Image ->', $options);
 
-        //Send post request to faceplus host
-        $response = Http::acceptJson()->asForm()->post($url, $allOptions);
+        // Check if 'image_file' is an instance of UploadedFile and needs to be attached
+        if (isset($options['image_file']) && $options['image_file'] instanceof \Illuminate\Http\UploadedFile) {
+            //Get file from request
+            $imageFile = $options['image_file'];
+            unset($allOptions['image_file']); //removing image from image_file
 
-        Log::channel('stderr')->info($response);
+            $httpRequest = Http::acceptJson()->attach(
+                'image_file',
+                $imageFile->getContent(),
+                $imageFile->getClientOriginalName()
+            );
+        } else {
+            //Send post request to faceplus host
+            $httpRequest = Http::acceptJson()->asForm();
+        }
+        $response = $httpRequest->post($url, $allOptions);
+
+        Log::channel('stderr')->info('FP Response -> ' . $response);
 
         return $response;
     }
@@ -68,7 +85,8 @@ class FacePlusClient
      * @param string $path the request uri, starts with '/''
      * @return string the request url
      */
-    public function generateUrl($path) {
+    public function generateUrl($path)
+    {
         return trim($this->host, '/') . '/' . trim($path, '/');
     }
 
@@ -107,7 +125,8 @@ class FacePlusClient
     /**
      * add one or more face to exists faceset
      */
-    public function addFaceset($options) {
+    public function addFaceset($options)
+    {
         $path = '/facepp/v3/faceset/addface';
         return $this->request($path, $options);
     }
@@ -115,7 +134,8 @@ class FacePlusClient
     /**
      * remove one or more face of the faceset
      */
-    public function removeFaceset($options) {
+    public function removeFaceset($options)
+    {
         $path = '/facepp/v3/faceset/removeface';
         return $this->request($path, $options);
     }
@@ -123,7 +143,8 @@ class FacePlusClient
     /**
      * update faceset information
      */
-    public function updateFaceset($options) {
+    public function updateFaceset($options)
+    {
         $path = '/facepp/v3/faceset/update';
         return $this->request($path, $options);
     }
@@ -131,7 +152,8 @@ class FacePlusClient
     /**
      * get faceset information
      */
-    public function getDetailFaceset($options) {
+    public function getDetailFaceset($options)
+    {
         $path = '/facepp/v3/faceset/getdetail';
         return $this->request($path, $options);
     }
@@ -139,7 +161,8 @@ class FacePlusClient
     /**
      * delete faceset
      */
-    public function deleteFaceset($options) {
+    public function deleteFaceset($options)
+    {
         $path = '/facepp/v3/faceset/delete';
         return $this->request($path, $options);
     }
@@ -147,7 +170,8 @@ class FacePlusClient
     /**
      * get faceset list
      */
-    public function getFacesets($options) {
+    public function getFacesets($options)
+    {
         $path = '/facepp/v3/faceset/getfacesets';
         return $this->request($path, $options);
     }
@@ -155,7 +179,8 @@ class FacePlusClient
     /**
      * analyze face_token face
      */
-    public function analyzeFace($options) {
+    public function analyzeFace($options)
+    {
         $path = '/facepp/v3/face/analyze';
         return $this->request($path, $options);
     }
@@ -163,7 +188,8 @@ class FacePlusClient
     /**
      * get face token detail
      */
-    public function getDetailFace($options) {
+    public function getDetailFace($options)
+    {
         $path = '/facepp/v3/face/getdetail';
         return $this->request($path, $options);
     }
@@ -171,9 +197,9 @@ class FacePlusClient
     /**
      * set user id of the face token
      */
-    public function setUserIdFace($options) {
+    public function setUserIdFace($options)
+    {
         $path = '/facepp/v3/face/setuserid';
         return $this->request($path, $options);
     }
-
 }
