@@ -1,0 +1,16 @@
+meta {
+  name: Get Face Sets
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{url}}/facepp/v3/faceset/getfacesets?api_key={{api_key}}&api_secret={{api_secret}}
+  body: none
+  auth: none
+}
+
+query {
+  api_key: {{api_key}}
+  api_secret: {{api_secret}}
+}

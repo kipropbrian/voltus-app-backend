@@ -1,0 +1,21 @@
+meta {
+  name: Create Faceset
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{url}}/facepp/v3/faceset/update?api_key={{api_key}}&api_secret={{api_secret}}
+  body: multipartForm
+  auth: none
+}
+
+query {
+  api_key: {{api_key}}
+  api_secret: {{api_secret}}
+}
+
+body:multipart-form {
+  new_outer_id: 16cd25de-f82c-4fa9-8b45-6a091bede2e6
+  faceset_token: be300fcc615f195cb6a772dda374797e
+}

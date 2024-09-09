@@ -18,9 +18,9 @@ class FacesetSeeder extends Seeder
     {
         DB::table('facesets')->insert([
             'uuid' => Str::uuid(),
-            'display_name' => "test_voltus",
-            'outer_id' => "084fc771-5469-40b2-894e-c92c469b0884",
-            'faceset_token' => "5684e0715c69b7a8ee74463841839d6c",
+            'display_name' => "voltus_test",
+            'outer_id' => "16cd25de-f82c-4fa9-8b45-6a091bede2e6",
+            'faceset_token' => "be300fcc615f195cb6a772dda374797e",
             'status' => "active",
             'created_at' => now()
         ]);

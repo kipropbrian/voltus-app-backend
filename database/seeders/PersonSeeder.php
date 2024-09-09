@@ -24,9 +24,9 @@ class PersonSeeder extends Seeder
             'gender' => "Male",
             'created_at' => now()
         ]);
-        
+
         DB::table('people')->insert([
-            'uuid' => 'e20be08c-ec62-4789-91bd-5fd57684678b',
+            'uuid' => Str::uuid(),
             'name' => "Uhuru Kenyatta",
             'email' => 'uhuru.kenyatta@kenya.go.ke',
             'about' =>  "4th president of Kenya",

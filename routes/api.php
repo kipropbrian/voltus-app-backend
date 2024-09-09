@@ -21,4 +21,5 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 Route::resource('person', PersonController::class);
-Route::post('image/upload', [ImageController::class, 'searchOnFp']); // actually store
+Route::post('image/upload', [ImageController::class, 'detectFaces']); // actually store
+Route::post('image/sync', [ImageController::class, 'syncImage']);

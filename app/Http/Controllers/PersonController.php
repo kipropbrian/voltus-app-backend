@@ -18,7 +18,9 @@ class PersonController extends Controller
     public function index()
     {
         //Get all
-        return response()->json(['people' => Person::all ()]);
+        $people = Person::with('images')->get();
+
+        return response()->json(['people' => $people]);
     }
 
     /**
@@ -88,9 +90,9 @@ class PersonController extends Controller
         ]);
 
         //store file on cloudinary
-        if ($request->hasFile('image')){
+        if ($request->hasFile('image')) {
             $result = $request->image->storeOnCloudinary('voltus');
-            Log::channel('stderr')->info('Image '. $result->getFileName(). ' saved on cloudinary! on URL '. $result->getPath());
+            Log::channel('stderr')->info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
 
             $image = new Image;
             $image->uuid = Str::uuid();

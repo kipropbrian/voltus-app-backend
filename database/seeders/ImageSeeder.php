@@ -18,18 +18,17 @@ class ImageSeeder extends Seeder
     {
         DB::table('images')->insert([
             'uuid' => Str::uuid(),
-            'image_url' => 'http://res.cloudinary.com/voltus/image/upload/v1667340994/voltus/aqt6tewf55ywg52ns8ml.jpg',
-            'image_url_secure' => 'https://res.cloudinary.com/voltus/image/upload/v1667340994/voltus/aqt6tewf55ywg52ns8ml.jpg',
-            'size' => '19.62 KB',
+            'image_url' => 'http://res.cloudinary.com/voltus/image/upload/v1667340994/voltus/xzmksyvrbmbtyldnc00l.png',
+            'image_url_secure' => 'https://res.cloudinary.com/voltus/image/upload/v1667340994/voltus/xzmksyvrbmbtyldnc00l.png',
+            'size' => '285.41 KB',
             'filetype' => 'image',
             'originalFilename' => 'phpKv4CTA',
-            'publicId' => 'voltus/aqt6tewf55ywg52ns8ml',
-            'extension' => 'jpg',
-            'width' => '130',
-            'height' => '164',
+            'publicId' => 'voltus/xzmksyvrbmbtyldnc00l',
+            'extension' => 'png',
+            'width' => '507',
+            'height' => '460',
             'timeUploaded' => '2022-11-01T22:16:34Z',
             'person_id' => 1,
-            'faceset_id' => 1,
             'created_at' => now(),
         ]);
 
@@ -46,7 +45,6 @@ class ImageSeeder extends Seeder
             'height'  => '1600',
             'timeUploaded'  => '2022-11-01T22:35:13Z',
             'person_id'  => 1,
-            'faceset_id' => 1,
             'created_at'  => now(),
         ]);
 
@@ -63,7 +61,6 @@ class ImageSeeder extends Seeder
             'height' => '926',
             'timeUploaded' => '2022-11-02T19:17:54Z',
             'person_id' => 2,
-            'faceset_id' => 1,
             'created_at' => now(),
         ]);
 
@@ -80,7 +77,6 @@ class ImageSeeder extends Seeder
             'height' => '533',
             'timeUploaded' => '2022-11-02T19:22:41Z',
             'person_id' => 3,
-            'faceset_id' => 1,
             'created_at' => now()
         ]);
 
@@ -97,7 +93,6 @@ class ImageSeeder extends Seeder
             'height' => '549',
             'timeUploaded' => '2022-11-02T19:28:02Z',
             'person_id' => 4,
-            'faceset_id' => 1,
             'created_at' => now(),
         ]);
 
@@ -114,7 +109,6 @@ class ImageSeeder extends Seeder
             'height' => '1600',
             'timeUploaded' => '2022-11-02T19:33:20Z',
             'person_id' => 5,
-            'faceset_id' => 1,
             'created_at' => now(),
         ]);
     }

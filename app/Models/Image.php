@@ -18,4 +18,9 @@ class Image extends Model
     {
         return $this->belongsTo(Person::class);
     }
+
+    public function faceTokens()
+    {
+        return $this->hasMany(FaceToken::class);
+    }
 }
