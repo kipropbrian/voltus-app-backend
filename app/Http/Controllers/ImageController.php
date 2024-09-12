@@ -91,17 +91,17 @@ class ImageController extends Controller
 	public function searchOnFp(Request $request, Image $image)
 	{
 		if ($request->hasFile('image') && $request->file('image')->isValid()) {
-			Log::channel('stderr')->info("Image Log -> {$request->image}");
 
 			$faceplus = new FacePlusClient();
 			//send to fp and save search details
 			$faceSet = Faceset::where('status', 'active')->first();
-			Log::channel('stderr')->info("Faceset found ->  {$faceSet->display_name} | Faceset Token -> {$faceSet->faceset_token}");
+			
 			$response = $faceplus->searchFace(['image_file' => $request->file("image"), 'faceset_token' => $faceSet->faceset_token]); //url
+
 			$data = $response->object();
 
 			if (isset($data->error_message)) {
-				return "There was in issue with the request " . $data->error_message;
+				return response()->json($data);
 			}
 
 			$personUuids = [];
@@ -111,7 +111,7 @@ class ImageController extends Controller
 					array_push($personUuids, $result->user_id);
 				}
 			}
-			$persons = Person::whereIn('uuid', $personUuids)->get();
+			$persons = Person::whereIn('uuid', $personUuids)->with('latestImage')->get();
 
 			$resp = ['persons' => $persons, 'facepResponse' => $data, 'imageuuids' => $personUuids];
 
@@ -135,6 +135,7 @@ class ImageController extends Controller
 			//send to fp and save search details
 			$faceSet = Faceset::where('status', 'active')->first();
 			Log::channel('stderr')->info("Faceset found ->  {$faceSet->display_name} | Faceset Token -> {$faceSet->faceset_token}");
+			
 			$response = $faceplus->detectFace(['image_file' => $request->file("image"), 'faceset_token' => $faceSet->faceset_token]); //url
 			$data = $response->object();
 

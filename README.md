@@ -19,6 +19,9 @@ Update composer
 
 # Routes
 
+# Start
+`php artisan serve`
+
 Quick and dirty of the latest routes
 
 `php artisan route:list`

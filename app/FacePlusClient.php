@@ -38,9 +38,9 @@ class FacePlusClient
             throw new Exception("Please ensure your FPP credentials are set before continuing.");
         }
 
-        $this->host = env('FACEPLUS_API_KEY');
-        $this->apiKey = env('FACEPLUS_API_SECRET');
-        $this->apiSecret = env('FACEPLUS_API_HOST');
+        $this->host = env('FACEPLUS_API_HOST');
+        $this->apiKey = env('FACEPLUS_API_KEY');
+        $this->apiSecret = env('FACEPLUS_API_SECRET');
         Log::channel('stderr')->info("Config keys are set up!");
     }
 
