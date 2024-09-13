@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FacePlusController;
 use App\Http\Controllers\ImageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,5 +22,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 Route::resource('person', PersonController::class);
-Route::post('image/upload', [ImageController::class, 'searchOnFp']); // actually store
+Route::post('face/search', [FacePlusController::class, 'facePlusSearch']); 
+Route::post('face/detect', [FacePlusController::class, 'facePlusDetect']); 
+
 Route::post('image/sync', [ImageController::class, 'syncImage']);

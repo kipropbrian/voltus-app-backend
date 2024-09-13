@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use App\FacePlusClient;
 use App\Models\Faceset;
-use Illuminate\Support\Str;
+use App\Models\Person;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -76,124 +76,60 @@ class FacePlusController extends Controller
      */
     public function facePlusSearch(Request $request, FacePlusClient $faceplus)
     {
-        // //upload image to cloudinary
-        // $validated = $request->validate([
-        //     'image' => 'required|mimes:jpg,jpeg,png|max:2048'
-        // ]);
-        // Log::channel('stderr')->info('processing');
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            Log::channel('stderr')->info("Image Log -> {$request->image}");
 
-        // //store file on cloudinary
-        // $image = new Image;
-        // if ($request->hasFile('image')){
-        //     Log::notice("Saving on cloudinary");
-        //     $result = $request->image->storeOnCloudinary('voltus');
-        //     Log::channel('stderr')->info('Image '. $result->getFileName(). ' saved on cloudinary! on URL '. $result->getPath());
+            $faceplus = new FacePlusClient();
+            //send to fp and save search details
+            $faceSet = Faceset::where('status', 'active')->first();
+            Log::channel('stderr')->info("Faceset found ->  {$faceSet->display_name} | Faceset Token -> {$faceSet->faceset_token}");
+            
+            $response = $faceplus->detectFace(['image_file' => $request->file("image"), 'faceset_token' => $faceSet->faceset_token]); //url
+            $data = $response->object();
 
-        //     //save details on image table
-        //     $image = new Image;
-        //     $image->uuid = Str::uuid();
-        //     $image->image_url = $result->getPath();
-        //     $image->image_url_secure =  $result->getSecurePath();
-        //     $image->size = $result->getReadableSize();
-        //     $image->filetype = $result->getFileType();
-        //     $image->originalFilename = $result->getOriginalFileName();
-        //     $image->publicId = $result->getPublicId();
-        //     $image->extension = $result->getExtension();
-        //     $image->width = $result->getWidth();
-        //     $image->height = $result->getHeight();
-        //     $image->person_id = 1; //TODO remove.
-        //     $image->timeUploaded = $result->getTimeUploaded();
-        //     $image->save();
-        // }
-        // else {
-        //     return response()->json(['error' => 'Image not found bruh']);
-        // }
+            if (isset($data->error_message)) {
+                return "There was in issue with the request " . $data->error_message;
+            }
 
-        // //send to fp and save search details
-        // $faceSet = Faceset::where('status', 'active')->first();
-        // $response = $faceplus->searchFace(['image_url' => $image->image_url, 'faceset_token' => $faceSet->faceset_token]); //url
-        // $data = $response->object();
-
-        // if(isset($data->error_message)){
-        //     return "There was in issue with the request" . $data->error_message;
-        // }
-
-        // $imageUuids = [];
-        // //if match search for uuid in person db
-        // foreach( $data->results as $result ) {
-        //     if (isset($result->user_id)) {
-        //         array_push($imageUuids, $result->user_id);
-        //     }
-        // }
-        // $images = Image::whereIn('uuid', $imageUuids)->get();
-
-        // $resp = ['images' => $images, 'facepResponse' => $data, 'imageuuids' => $imageUuids];
-        $resp = [
-            "message" => "Succesfully processed", 
-            "info" => [
-                "persons" => [
-                    [
-                        "id" => 2, 
-                        "uuid" => "e20be08c-ec62-4789-91bd-5fd57684678b", 
-                        "name" => "Uhuru Kenyatta", 
-                        "about" => "4th president of Kenya", 
-                        "email" => "uhuru.kenyatta@kenya.go.ke", 
-                        "gender" => "Male", 
-                        "created_at" => "2023-08-02T07:36:42.000000Z", 
-                        "updated_at" => null
-                    ]
-                ], 
-                "facepResponse" => [
-                    "image_id" => "O2VoqtkUQ4+MKqn8Yj+Yrw==", 
-                    "faces" => [
-                        [
-                            "face_rectangle" => [
-                                "width" => 65, 
-                                "top" => 79, 
-                                "left" => 325, 
-                                "height" => 65
-                            ], 
-                            "face_token" => "39c38ba24998ef5582b4f48b694a93b0"
-                        ], 
-                        [
-                            "face_rectangle" => [
-                                "width" => 62, 
-                                "top" => 102, 
-                                "left" => 111, 
-                                "height" => 62
-                            ], 
-                            "face_token" => "de3c2f98c2fee1952d737b01a7561d8d"
-                        ], 
-                        [
-                            "face_rectangle" => [
-                                "width" => 58, 
-                                "top" => 96, 
-                                "left" => 542, 
-                                "height" => 58
-                            ], 
-                            "face_token" => "5316935480a9a128b75a26d6ad835863"
-                        ]
-                    ], 
-                    "time_used" => 412, 
-                    "thresholds" => [
-                        "1e-3" => 62.327, 
-                        "1e-5" => 73.975, 
-                        "1e-4" => 69.101
-                    ], 
-                    "request_id" => "1707408142,f3417d1f-0f32-490a-90ab-7140a8e82371", 
-                    "results" => [
-                        [
-                            "confidence" => 93.457, 
-                            "user_id" => "e20be08c-ec62-4789-91bd-5fd57684678b", 
-                            "face_token" => "c81cafa44bc32ffe4d40edfc630373f3"
-                        ]
-                    ]
-                ], 
-                "imageuuids" => ["e20be08c-ec62-4789-91bd-5fd57684678b"]
-            ]
-        ];
-
-        return response()->json($resp);
+            return response()->json(['message' => 'Succesfully processed', 'info' => $data]);
+        }
     }
 
+
+    /**
+     * Detect faces in an mage on facePlusPlus
+     *
+     * @param \Illuminate\Http\Request
+     * @return \Illuminate\Http\Response
+     */
+    public function facePlusDetect(Request $request, FacePlusClient $faceplus)
+    {
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+
+			$faceplus = new FacePlusClient();
+			//send to fp and save search details
+			$faceSet = Faceset::where('status', 'active')->first();
+			
+			$response = $faceplus->searchFace(['image_file' => $request->file("image"), 'faceset_token' => $faceSet->faceset_token]); //url
+
+			$data = $response->object();
+
+			if (isset($data->error_message)) {
+				return response()->json($data);
+			}
+
+			$personUuids = [];
+			//if match search for uuid in person db
+			foreach ($data->results as $result) {
+				if (isset($result->user_id)) {
+					array_push($personUuids, $result->user_id);
+				}
+			}
+			$persons = Person::whereIn('uuid', $personUuids)->with('latestImage')->get();
+
+			$resp = ['persons' => $persons, 'facepResponse' => $data, 'imageuuids' => $personUuids];
+
+			return response()->json(['message' => 'Succesfully processed', 'info' => $resp]);
+		}
+    }
 }
