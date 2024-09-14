@@ -23,6 +23,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 Route::resource('person', PersonController::class);
 Route::post('face/search', [FacePlusController::class, 'facePlusSearch']); 
-Route::post('face/detect', [FacePlusController::class, 'facePlusDetect']); 
+Route::post('face/detect', [FacePlusController::class, 'facePlusDetect']);
+Route::post('face/fullsearch', [FacePlusController::class, 'detectAndSearchFaces']); 
 
 Route::post('image/sync', [ImageController::class, 'syncImage']);
