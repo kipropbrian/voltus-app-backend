@@ -11,7 +11,8 @@
         "laravel/fortify": "^1.14",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.7"
+        "laravel/tinker": "^2.7",
+        "opcodesio/log-viewer": "^3.11"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
