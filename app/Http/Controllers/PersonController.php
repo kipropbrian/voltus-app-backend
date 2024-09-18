@@ -31,6 +31,7 @@ class PersonController extends Controller
     public function create()
     {
         //
+        return response()->json(['people' => 'sdsd']);
     }
 
     /**
@@ -41,7 +42,55 @@ class PersonController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $validated = $request->validate([
+                'name' => 'required|max:255',
+                'email' => 'nullable',
+                'gender' => 'required',
+                'about' => 'required|max:255',
+                'image' => 'nullable|mimes:jpg,jpeg,png|max:2048'
+            ]);
+
+            $person = new Person($validated);
+            $person->uuid = (string) Str::uuid();
+            $person->save();
+
+            //store file on cloudinary
+            if ($request->hasFile('image')) {
+                $result = $request->image->storeOnCloudinary('voltus');
+                Log::info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
+
+                $image = new Image;
+                $image->uuid = Str::uuid();
+                $image->image_url = $result->getPath();
+                $image->image_url_secure =  $result->getSecurePath();
+                $image->size = $result->getReadableSize();
+                $image->filetype = $result->getFileType();
+                $image->originalFilename = $result->getOriginalFileName();
+                $image->publicId = $result->getPublicId();
+                $image->extension = $result->getExtension();
+                $image->width = $result->getWidth();
+                $image->height = $result->getHeight();
+                $image->timeUploaded = $result->getTimeUploaded();
+
+                $person->images()->save($image);
+            }
+
+            Log::info('Person Created');
+
+            return response()->json([
+                'message' => 'Person and image saved successfully!',
+                'person' => $person,
+                'image' => $image ?? null, // Return image data if an image was uploaded
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating person: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while saving the person and image.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -50,12 +99,7 @@ class PersonController extends Controller
      * @param  \App\Models\Person  $person
      * @return \Illuminate\Http\Response
      */
-    public function show(Person $person)
-    {
-        return view('person.show', [
-            'person' => $person
-        ]);
-    }
+    public function show(Person $person) {}
 
     /**
      * Show the form for editing the specified resource.
@@ -63,13 +107,7 @@ class PersonController extends Controller
      * @param  \App\Models\Person  $person
      * @return \Illuminate\Http\Response
      */
-    public function edit(Person $person)
-    {
-        //
-        return view('person.edit', [
-            'person' => $person
-        ]);
-    }
+    public function edit(Person $person) {}
 
     /**
      * Update the specified resource in storage.
@@ -125,6 +163,43 @@ class PersonController extends Controller
      */
     public function destroy(Person $person)
     {
-        //
+        try {
+            // Step 1: Find the person by ID
+            $person = Person::findOrFail($id);
+
+            // Step 2: Retrieve associated images for the person
+            $images = $person->images;
+
+            // Step 3: Loop through each image and delete it from Cloudinary and the database
+            foreach ($images as $image) {
+                // Delete the image from Cloudinary
+                try {
+                    // Assuming you're using Cloudinary, remove the image by public ID
+                    \Cloudinary::destroy($image->publicId);
+                    Log::info('Image deleted from Cloudinary: ' . $image->publicId);
+                } catch (\Exception $e) {
+                    Log::error('Failed to delete image from Cloudinary: ' . $e->getMessage());
+                }
+
+                // Delete the image from the database
+                $image->delete();
+            }
+
+            // Step 4: Delete the person from the database
+            $person->delete();
+            Log::info('Person deleted with ID: ' . $person->id);
+
+            // Step 5: Return success response
+            return response()->json([
+                'message' => 'Person and associated images deleted successfully!',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error deleting person and images: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while deleting the person and images.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
