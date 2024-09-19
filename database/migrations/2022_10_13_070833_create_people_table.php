@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string("gender")->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

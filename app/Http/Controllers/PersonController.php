@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Person;
 use App\Models\Image;
+use App\Models\Person;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class PersonController extends Controller
 {
@@ -164,29 +165,13 @@ class PersonController extends Controller
     public function destroy(Person $person)
     {
         try {
-            // Step 1: Find the person by ID
-            $person = Person::findOrFail($id);
-
-            // Step 2: Retrieve associated images for the person
-            $images = $person->images;
-
-            // Step 3: Loop through each image and delete it from Cloudinary and the database
-            foreach ($images as $image) {
-                // Delete the image from Cloudinary
-                try {
-                    // Assuming you're using Cloudinary, remove the image by public ID
-                    \Cloudinary::destroy($image->publicId);
-                    Log::info('Image deleted from Cloudinary: ' . $image->publicId);
-                } catch (\Exception $e) {
-                    Log::error('Failed to delete image from Cloudinary: ' . $e->getMessage());
+            if ($person->images) {
+                foreach ($person->images as $image) {
+                    $image->delete();
                 }
-
-                // Delete the image from the database
-                $image->delete();
             }
-
-            // Step 4: Delete the person from the database
             $person->delete();
+
             Log::info('Person deleted with ID: ' . $person->id);
 
             // Step 5: Return success response
