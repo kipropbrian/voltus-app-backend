@@ -45,7 +45,7 @@ class PersonController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|max:255',
+                'name' => 'required|max:255|unique:people,name',
                 'email' => 'nullable',
                 'gender' => 'required',
                 'about' => 'required|max:255',
@@ -100,7 +100,15 @@ class PersonController extends Controller
      * @param  \App\Models\Person  $person
      * @return \Illuminate\Http\Response
      */
-    public function show(Person $person) {}
+    public function show(Person $person)
+    {
+        $person->load('images');
+
+        return response()->json([
+            'status' => 'success',
+            'person' => $person
+        ], 200);
+    }
 
     /**
      * Show the form for editing the specified resource.

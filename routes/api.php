@@ -5,6 +5,7 @@ use App\Http\Controllers\ImageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\FaceSetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,8 +23,16 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 Route::resource('person', PersonController::class);
-Route::post('face/search', [FacePlusController::class, 'facePlusSearch']); 
+Route::post('face/search', [FacePlusController::class, 'facePlusSearch']);
 Route::post('face/detect', [FacePlusController::class, 'facePlusDetect']);
-Route::post('face/fullsearch', [FacePlusController::class, 'detectAndSearchFaces']); 
+Route::post('face/fullsearch', [FacePlusController::class, 'detectAndSearchFaces']);
 
 Route::post('image/sync', [ImageController::class, 'syncImage']);
+
+Route::post('/faceset/create', [FaceSetController::class, 'create']);
+Route::get('/faceset/list', [FaceSetController::class, 'index']);
+Route::get('/faceset/show', [FaceSetController::class, 'show']);
+Route::put('/faceset/update', [FaceSetController::class, 'update']);
+Route::delete('/faceset/delete', [FaceSetController::class, 'delete']);
+Route::post('/faceset/add-face', [FaceSetController::class, 'addFace']);
+Route::post('/faceset/remove-face', [FaceSetController::class, 'removeFace']);
