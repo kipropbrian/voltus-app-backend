@@ -29,10 +29,26 @@ Route::post('face/fullsearch', [FacePlusController::class, 'detectAndSearchFaces
 
 Route::post('image/sync', [ImageController::class, 'syncImage']);
 
-Route::post('/faceset/create', [FaceSetController::class, 'create']);
-Route::get('/faceset/list', [FaceSetController::class, 'index']);
-Route::get('/faceset/show', [FaceSetController::class, 'show']);
-Route::put('/faceset/update', [FaceSetController::class, 'update']);
-Route::delete('/faceset/delete', [FaceSetController::class, 'delete']);
-Route::post('/faceset/add-face', [FaceSetController::class, 'addFace']);
-Route::post('/faceset/remove-face', [FaceSetController::class, 'removeFace']);
+// Grouping all routes related to facesets under the /api/facesets path
+Route::prefix('faceset')->group(function () {
+    // Create a new faceset
+    Route::post('/', [FaceSetController::class, 'create'])->name('faceset.create');
+
+    // List all facesets
+    Route::get('/', [FaceSetController::class, 'index'])->name('faceset.index');
+
+    // Get details of a specific faceset by outer_id
+    Route::get('/{outer_id}', [FaceSetController::class, 'show'])->name('faceset.show');
+
+    // Update a faceset by outer_id
+    Route::put('/{outer_id}', [FaceSetController::class, 'update'])->name('faceset.update');
+
+    // Delete a faceset by outer_id
+    Route::delete('/{outer_id}', [FaceSetController::class, 'destroy'])->name('faceset.destroy');
+
+    // Add faces to a faceset by outer_id
+    Route::post('/{outer_id}/add-face', [FaceSetController::class, 'addFace'])->name('faceset.addFace');
+
+    // Remove faces from a faceset by outer_id
+    Route::post('/{outer_id}/remove-face', [FaceSetController::class, 'removeFace'])->name('faceset.removeFace');
+});

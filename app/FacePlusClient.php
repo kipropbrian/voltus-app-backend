@@ -41,7 +41,7 @@ class FacePlusClient
         $this->host = env('FACEPLUS_API_HOST');
         $this->apiKey = env('FACEPLUS_API_KEY');
         $this->apiSecret = env('FACEPLUS_API_SECRET');
-        Log::channel('stderr')->info("Config keys are set up!");
+        Log::info("Config keys are set up!");
     }
 
 
@@ -56,8 +56,7 @@ class FacePlusClient
 
         $allOptions = array_merge($creds, $options);
 
-        Log::channel('stderr')->info("FP Post options => | Path -> {$path} | Options -> " . json_encode($allOptions));
-        Log::channel('stderr')->info("Image ->", $options);
+        Log::info("FP Post options =>  | \n Path -> {$path} | \n Options -> " . json_encode($options));
 
         // Check if 'image_file' is an instance of UploadedFile and needs to be attached
         if (isset($options['image_file']) && $options['image_file'] instanceof \Illuminate\Http\UploadedFile) {
@@ -76,7 +75,7 @@ class FacePlusClient
         }
         $response = $httpRequest->post($url, $allOptions);
 
-        Log::channel('stderr')->info('FP Response -> ' . $response);
+        Log::info('FP Response -> ' . $response);
 
         return $response;
     }

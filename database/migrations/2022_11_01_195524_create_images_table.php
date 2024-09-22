@@ -28,6 +28,7 @@ return new class extends Migration
             $table->string('timeUploaded');
             $table->foreignId('person_id')->constrained();
             $table->boolean('detected')->default(0);
+            $table->string('image_id');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -41,6 +42,5 @@ return new class extends Migration
     public function down()
     {
         Schema::dropIfExists('images');
-        Schema::dropIfExists('facesets');
     }
 };

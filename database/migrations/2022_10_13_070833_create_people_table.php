@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string("about")->nullable();
             $table->string("email")->nullable();
             $table->string("gender")->nullable();
+            $table->string("tag")->nullable();
 
             $table->timestamps();
             $table->softDeletes();

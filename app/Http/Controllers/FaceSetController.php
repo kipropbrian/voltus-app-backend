@@ -30,7 +30,6 @@ class FaceSetController extends Controller
             'display_name' => 'nullable|string',
             'tags' => 'nullable|string',
             'force_merge' => 'nullable|boolean',
-            // Add other necessary validations based on Face++ API
         ]);
 
         try {
@@ -61,29 +60,76 @@ class FaceSetController extends Controller
     }
 
     /**
-     * Get details of a specific FaceSet.
+     * Show details of a specific faceset
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param string $outer_id
+     * @return JsonResponse
      */
-    public function show(Request $request): JsonResponse
+    public function show(string $outer_id): JsonResponse
     {
-        $options = $request->all();
-        $response = $this->facePlusClient->getDetailFaceset($options);
-        return response()->json($response->json());
+        $options = ['outer_id' => $outer_id];
+        try {
+            $response = $this->facePlusClient->getDetailFaceset($options);
+            return response()->json($response->json(), $response->status());
+        } catch (Exception $e) {
+            Log::error("Error showing faceset: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to retrieve faceset details'], 500);
+        }
     }
 
     /**
-     * Update a FaceSet.
+     * Update a faceset
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param string $outer_id
+     * @return JsonResponse
      */
-    public function update(Request $request)
+    public function update(Request $request, string $outer_id): JsonResponse
     {
-        $options = $request->all();
-        $response = $this->facePlusClient->updateFaceset($options);
-        return response()->json($response->json());
+        $validated = $request->validate([
+            'display_name' => 'nullable|string',
+            'tags' => 'nullable|string',
+            'display_name' => 'nullable|string',
+            'user_data' => 'nullable|string'
+        ]);
+
+        // Sanitize the tags field
+        if (!empty($validated['tags'])) {
+            $validated['tags'] = $this->sanitizeTags($validated['tags']);
+        }
+
+        $validated['outer_id'] = $outer_id;
+
+        try {
+            $response = $this->facePlusClient->updateFaceset($validated);
+            return response()->json($response->json(), $response->status());
+        } catch (Exception $e) {
+            Log::error("Error updating faceset: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to update faceset'], 500);
+        }
+    }
+
+    /**
+     * Sanitize tags to remove unwanted characters and empty values.
+     *
+     * @param string $tags
+     * @return string
+     */
+    protected function sanitizeTags(string $tags): string
+    {
+        // Split tags by comma, trim each tag, remove empty and forbidden characters
+        $forbiddenCharacters = '/[\\^@,&=*\'"]/';
+
+        $sanitizedTags = array_filter(
+            array_map('trim', explode(',', $tags)), // Trim and split tags
+            function ($tag) use ($forbiddenCharacters) {
+                // Remove empty tags and tags with forbidden characters
+                return !empty($tag) && !preg_match($forbiddenCharacters, $tag);
+            }
+        );
+
+        // Join back the sanitized tags into a single string
+        return implode(',', $sanitizedTags);
     }
 
     /**
