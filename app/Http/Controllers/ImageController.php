@@ -6,7 +6,6 @@ use App\Models\Image;
 use App\FacePlusClient;
 use App\Models\Faceset;
 use App\Models\FaceToken;
-use App\Models\Person;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;

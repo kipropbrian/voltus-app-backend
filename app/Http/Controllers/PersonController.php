@@ -8,6 +8,9 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Transformation\Resize;
+use Cloudinary\Transformation\Gravity;
+use Cloudinary\Transformation\FocusOn;
 
 class PersonController extends Controller
 {
@@ -103,7 +106,7 @@ class PersonController extends Controller
     public function show(Person $person)
     {
         $person->load('images');
-
+        
         return response()->json([
             'status' => 'success',
             'person' => $person
@@ -127,41 +130,53 @@ class PersonController extends Controller
      */
     public function update(Request $request, Person $person)
     {
-        //TODO: Rollback on failure
-        $validated = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required',
-            'gender' => 'required',
-            'about' => 'required|max:255',
-            'image' => 'nullable|mimes:jpg,jpeg,png|max:2048'
-        ]);
+        try {
+            //TODO: Rollback on failure
+            $validated = $request->validate([
+                'name' => 'required|max:255',
+                'gender' => 'required',
+                'about' => 'required|max:255',
+                'image' => 'nullable|mimes:jpg,jpeg,png|max:2048'
+            ]);
 
-        //store file on cloudinary
-        if ($request->hasFile('image')) {
-            $result = $request->image->storeOnCloudinary('voltus');
-            Log::channel('stderr')->info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
+            //store file on cloudinary
+            if ($request->hasFile('image')) {
+                $result = $request->image->storeOnCloudinary('voltus');
+                Log::channel('stderr')->info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
 
-            $image = new Image;
-            $image->uuid = Str::uuid();
-            $image->image_url = $result->getPath();
-            $image->image_url_secure =  $result->getSecurePath();
-            $image->size = $result->getReadableSize();
-            $image->filetype = $result->getFileType();
-            $image->originalFilename = $result->getOriginalFileName();
-            $image->publicId = $result->getPublicId();
-            $image->extension = $result->getExtension();
-            $image->width = $result->getWidth();
-            $image->height = $result->getHeight();
-            $image->timeUploaded = $result->getTimeUploaded();
+                $image = new Image;
+                $image->uuid = Str::uuid();
+                $image->image_url = $result->getPath();
+                $image->image_url_secure =  $result->getSecurePath();
+                $image->size = $result->getReadableSize();
+                $image->filetype = $result->getFileType();
+                $image->originalFilename = $result->getOriginalFileName();
+                $image->publicId = $result->getPublicId();
+                $image->extension = $result->getExtension();
+                $image->width = $result->getWidth();
+                $image->height = $result->getHeight();
+                $image->timeUploaded = $result->getTimeUploaded();
 
-            $person->images()->save($image);
-            Log::channel('stderr')->info('Image saved and attached to person');
+                $person->images()->save($image);
+                Log::channel('stderr')->info('Image saved and attached to person');
+            }
+
+            $person->update($validated);
+            Log::info('Person info updated' . $person);
+
+            return response()->json([
+                'message' => 'Person updated successfully!',
+                'person' => $person,
+                'image' => $image ?? null,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating person: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while updating the persons details.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $person->update($validated);
-        Log::channel('stderr')->info('Person info updated');
-
-        return redirect(route('person.index'));
     }
 
     /**
