@@ -9,6 +9,9 @@ use Cloudinary\Asset\Image as CloudinaryImage;
 use Cloudinary\Transformation\Resize;
 use Cloudinary\Transformation\Gravity;
 use Cloudinary\Transformation\FocusOn;
+use Cloudinary\Transformation\RoundCorners;
+use Cloudinary\Transformation\Adjust;
+use Cloudinary\Transformation\Effect;
 
 class Image extends Model
 {
@@ -34,14 +37,19 @@ class Image extends Model
     // Define the accessor for transformed_url
     public function getTransformedUrlAttribute()
     {
-        return (new CloudinaryImage($this->publicId))
-            ->resize(
-                Resize::crop()
-                    ->gravity(
-                        Gravity::focusOn(
-                            FocusOn::face()
-                        )
+        return (new CloudinaryImage($this->publicId))->resize(
+            Resize::thumbnail()->width(200)
+                ->height(200)
+                ->zoom(0.65)
+                ->gravity(
+                    Gravity::focusOn(
+                        FocusOn::face()
                     )
-            )->toUrl();
+                )
+        )
+            ->roundCorners(RoundCorners::max())
+            ->adjust(Adjust::improve())
+            ->effect(Effect::shadow())
+            ->toUrl();
     }
 }
