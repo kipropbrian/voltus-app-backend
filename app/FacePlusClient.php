@@ -8,6 +8,7 @@
 namespace App;
 
 use Exception;
+use App\Models\FaceplusRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
@@ -75,7 +76,15 @@ class FacePlusClient
         }
         $response = $httpRequest->post($url, $allOptions);
 
-        Log::info('FP Response -> ' . $response);
+        // Log the request to the facepp_requests table
+        $facePlusData = new FaceplusRequest;
+
+        $facePlusData->endpoint = $path;
+        $facePlusData->request_data = json_encode($options);
+        $facePlusData->response_data = json_encode($response->json());
+        $facePlusData->status_code = $response->status();
+
+        $facePlusData->save();
 
         return $response;
     }
