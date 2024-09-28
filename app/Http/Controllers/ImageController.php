@@ -37,21 +37,17 @@ class ImageController extends Controller
 	 * Store a newly created resource in storage.
 	 *
 	 * @param  \Illuminate\Http\Request  $request
-	 * @return \Illuminate\Http\Response
+	 * @param  String $image_id
+	 * @return \App\Models\Image
 	 */
-	public function store(Request $request)
+	public function store(Request $request, String $image_id)
 	{
-		//TODO: Might be easier to do this async and just send image to FP as its uploading to Cloudinary
-		//TODO: Sockets for comms with frontend
-		//TODO: Rollback on failure
-		$validated = $request->validate([
-			'image' => 'mimes:jpg,jpeg,png|max:2048'
-		]);
-
 		//store file on cloudinary
 		if ($request->hasFile('image')) {
+			// Calculate MD5 hash from the uploaded file
+			$md5Hash = md5_file($request->file('image')->getRealPath());
+
 			$result = $request->image->storeOnCloudinary('voltus');
-			Log::channel('stderr')->info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
 
 			$image = new Image;
 			$image->uuid = Str::uuid();
@@ -65,20 +61,13 @@ class ImageController extends Controller
 			$image->width = $result->getWidth();
 			$image->height = $result->getHeight();
 			$image->timeUploaded = $result->getTimeUploaded();
-			$image->person_id = 1;
+			$image->faceplusimage_id = $image_id;
+			$image->md5 = $md5Hash;
 			$image->save();
 
-			Log::channel('stderr')->info('Image saved and attached to person');
-
-			//TODO: send on sockets that upload to CD is done. Face search about to start
-			//Search on faceplus
-			$resp = $this->searchOnFp($request, $image);
-
-			return response()->json([
-				'message' => 'Image succesfuly processed!',
-				'data' => $resp
-			]);
+			return $image;
 		}
+		throw new \Exception('No valid image provided');
 	}
 
 	/**
@@ -212,5 +201,39 @@ class ImageController extends Controller
 		//remove from face set if set.
 
 		//Delete from cloudinary
+	}
+
+	/**
+	 * Uploads the image to Cloudinary and creates an Image record.
+	 *
+	 * @param \Illuminate\Http\Request $request
+	 * @return \App\Models\Image
+	 */
+	public function uploadImageToCloudinary(Request $request)
+	{
+		if ($request->hasFile('image')) {
+			$result = $request->image->storeOnCloudinary('voltus');
+
+			Log::info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
+
+			// Create new Image record
+			$image = new Image;
+			$image->uuid = Str::uuid();
+			$image->image_url = $result->getPath();
+			$image->image_url_secure =  $result->getSecurePath();
+			$image->size = $result->getReadableSize();
+			$image->filetype = $result->getFileType();
+			$image->originalFilename = $result->getOriginalFileName();
+			$image->publicId = $result->getPublicId();
+			$image->extension = $result->getExtension();
+			$image->width = $result->getWidth();
+			$image->height = $result->getHeight();
+			$image->timeUploaded = $result->getTimeUploaded();
+			$image->save();
+
+			return $image; // Return the saved image record
+		}
+
+		throw new \Exception('No valid image provided');
 	}
 }

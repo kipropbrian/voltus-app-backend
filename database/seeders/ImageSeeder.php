@@ -29,6 +29,7 @@ class ImageSeeder extends Seeder
             'height' => '460',
             'timeUploaded' => '2022-11-01T22:16:34Z',
             'person_id' => 1,
+            'md5' => md5(random_int(1, 10000)),
             'created_at' => now(),
         ]);
 
@@ -45,6 +46,7 @@ class ImageSeeder extends Seeder
             'height'  => '1600',
             'timeUploaded'  => '2022-11-01T22:35:13Z',
             'person_id'  => 1,
+            'md5' => md5(random_int(1, 10000)),
             'created_at'  => now(),
         ]);
 
@@ -61,6 +63,7 @@ class ImageSeeder extends Seeder
             'height' => '926',
             'timeUploaded' => '2022-11-02T19:17:54Z',
             'person_id' => 2,
+            'md5' => md5(random_int(1, 10000)),
             'created_at' => now(),
         ]);
 
@@ -77,6 +80,7 @@ class ImageSeeder extends Seeder
             'height' => '533',
             'timeUploaded' => '2022-11-02T19:22:41Z',
             'person_id' => 3,
+            'md5' => md5(random_int(1, 10000)),
             'created_at' => now()
         ]);
 
@@ -93,6 +97,7 @@ class ImageSeeder extends Seeder
             'height' => '549',
             'timeUploaded' => '2022-11-02T19:28:02Z',
             'person_id' => 4,
+            'md5' => md5(random_int(1, 10000)),
             'created_at' => now(),
         ]);
 
@@ -108,7 +113,7 @@ class ImageSeeder extends Seeder
             'width' => '1043',
             'height' => '1600',
             'timeUploaded' => '2022-11-02T19:33:20Z',
-            'person_id' => 5,
+            'md5' => md5(random_int(1, 10000)),
             'created_at' => now(),
         ]);
     }

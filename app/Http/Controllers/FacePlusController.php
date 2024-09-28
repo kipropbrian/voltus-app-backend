@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Image;
 use App\FacePlusClient;
+use App\Models\FaceplusRequest;
+use App\Models\Faces;
 use App\Models\Faceset;
 use App\Models\Person;
 use Illuminate\Http\Request;
@@ -142,6 +144,9 @@ class FacePlusController extends Controller
      */
     public function detectAndSearchFaces(Request $request, FacePlusClient $faceplus)
     {
+        $request->validate([
+            'image' => 'mimes:jpg,jpeg,png|max:2048'
+        ]);
         // Step 1: Validate if the request has a valid image file
         if ($request->hasFile('image') && $request->file('image')->isValid()) {
 
@@ -149,15 +154,30 @@ class FacePlusController extends Controller
             $response = $faceplus->detectFace(['image_file' => $request->file('image')]);
             $data = $response->object();
 
+            $imageController = new ImageController();
+            $image = $imageController->store($request, $data->image_id);
+
+            $facePlusRequest = FaceplusRequest::where('request_id', $data->request_id)->first();
+
             // Check for error in response
             if (isset($data->error_message)) {
                 return response()->json(['error' => $data->error_message], 400);
             }
 
             // Step 2: Extract face tokens for all detected faces
+            // Step 2: Extract face tokens and save the detected face data
             $faceTokens = [];
             foreach ($data->faces as $face) {
                 $faceTokens[] = $face->face_token;
+
+                // Save face detection data in the faces table
+                $newFace = new Faces();
+                $newFace->face_token = $face->face_token;
+                $newFace->image_id = $image->id;
+                $newFace->faceplusrequest_id = $facePlusRequest->id;
+                $newFace->face_rectangle = json_encode($face->face_rectangle);
+                $newFace->landmarks = json_encode($face->landmark ?? null); // Handle if landmarks are not present
+                $newFace->save();
             }
 
             // Check if any faces were detected

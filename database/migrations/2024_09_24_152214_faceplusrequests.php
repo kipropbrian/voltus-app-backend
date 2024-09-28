@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('faceplus_requests', function (Blueprint $table) {
             $table->id();
             $table->string('endpoint');
-            $table->string('request_data')->nullable();
-            $table->string('response_data');
+            $table->json('request_data')->nullable();
+            $table->json('response_data');
             $table->integer('status_code')->nullable();
+            $table->string('request_id')->nullable();
             $table->timestamps();
         });
     }

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string("email")->nullable();
             $table->string("gender")->nullable();
             $table->string("tag")->nullable();
+            $table->string("country")->nullable();
 
             $table->timestamps();
             $table->softDeletes();
