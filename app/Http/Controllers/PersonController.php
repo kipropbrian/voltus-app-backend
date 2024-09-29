@@ -7,10 +7,6 @@ use App\Models\Person;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-use Cloudinary\Transformation\Resize;
-use Cloudinary\Transformation\Gravity;
-use Cloudinary\Transformation\FocusOn;
 
 class PersonController extends Controller
 {
@@ -61,26 +57,33 @@ class PersonController extends Controller
 
             //store file on cloudinary
             if ($request->hasFile('image')) {
-                $result = $request->image->storeOnCloudinary('voltus');
-                Log::info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
 
-                $image = new Image;
-                $image->uuid = Str::uuid();
-                $image->image_url = $result->getPath();
-                $image->image_url_secure =  $result->getSecurePath();
-                $image->size = $result->getReadableSize();
-                $image->filetype = $result->getFileType();
-                $image->originalFilename = $result->getOriginalFileName();
-                $image->publicId = $result->getPublicId();
-                $image->extension = $result->getExtension();
-                $image->width = $result->getWidth();
-                $image->height = $result->getHeight();
-                $image->timeUploaded = $result->getTimeUploaded();
+                $md5Hash = md5_file($request->file('image')->getRealPath());
 
-                $person->images()->save($image);
+                $similarImage = Image::where('md5', $md5Hash)->first();
+
+                if ($similarImage) {
+                    $person->images()->save($similarImage);
+                } else {
+                    $result = $request->image->storeOnCloudinary('voltus');
+
+                    $image = new Image;
+                    $image->uuid = Str::uuid();
+                    $image->image_url = $result->getPath();
+                    $image->image_url_secure =  $result->getSecurePath();
+                    $image->size = $result->getReadableSize();
+                    $image->filetype = $result->getFileType();
+                    $image->originalFilename = $result->getOriginalFileName();
+                    $image->publicId = $result->getPublicId();
+                    $image->extension = $result->getExtension();
+                    $image->width = $result->getWidth();
+                    $image->height = $result->getHeight();
+                    $image->timeUploaded = $result->getTimeUploaded();
+                    $image->md5 = $md5Hash;
+
+                    $person->images()->save($image);
+                }
             }
-
-            Log::info('Person Created');
 
             return response()->json([
                 'message' => 'Person and image saved successfully!',
@@ -88,7 +91,6 @@ class PersonController extends Controller
                 'image' => $image ?? null, // Return image data if an image was uploaded
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Error creating person: ' . $e->getMessage());
 
             return response()->json([
                 'message' => 'An error occurred while saving the person and image.',
@@ -106,7 +108,7 @@ class PersonController extends Controller
     public function show(Person $person)
     {
         $person->load('images');
-        
+
         return response()->json([
             'status' => 'success',
             'person' => $person

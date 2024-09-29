@@ -47,6 +47,12 @@ class ImageController extends Controller
 			// Calculate MD5 hash from the uploaded file
 			$md5Hash = md5_file($request->file('image')->getRealPath());
 
+			$similarImage = Image::where('md5', $md5Hash)->first();
+
+			if ($similarImage) {
+				return $similarImage;
+			}
+
 			$result = $request->image->storeOnCloudinary('voltus');
 
 			$image = new Image;

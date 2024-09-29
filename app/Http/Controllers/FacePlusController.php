@@ -176,7 +176,8 @@ class FacePlusController extends Controller
                 $newFace->image_id = $image->id;
                 $newFace->faceplusrequest_id = $facePlusRequest->id;
                 $newFace->face_rectangle = json_encode($face->face_rectangle);
-                $newFace->landmarks = json_encode($face->landmark ?? null); // Handle if landmarks are not present
+                $newFace->landmarks = $face->landmark ?? NULL;
+                $newFace->attributes = $face->attributes ?? NULL;
                 $newFace->save();
             }
 
