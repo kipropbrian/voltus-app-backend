@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('faceset_token');
             $table->string('status')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

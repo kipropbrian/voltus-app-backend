@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('status_code')->nullable();
             $table->string('request_id')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

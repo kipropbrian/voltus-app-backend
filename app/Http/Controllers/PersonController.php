@@ -7,9 +7,19 @@ use App\Models\Person;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\FacePlusClient;
+use App\Models\FaceplusRequest;
+use App\Models\Faces;
 
 class PersonController extends Controller
 {
+    protected $facePlusClient;
+
+    public function __construct(FacePlusClient $facePlusClient)
+    {
+        $this->facePlusClient = $facePlusClient;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -58,33 +68,54 @@ class PersonController extends Controller
             //store file on cloudinary
             if ($request->hasFile('image')) {
 
+                $response = $this->facePlusClient->detectFace(['image_file' => $request->file('image')]);
+                $data = $response->object();
+
+                if (count($data->faces) > 1) {
+                    return response()->json([
+                        'message' => 'An error occurred while saving the person and image.',
+                        'error' => 'The image contains multiple faces',
+                    ], 400);
+                }
+
                 $md5Hash = md5_file($request->file('image')->getRealPath());
 
-                $similarImage = Image::where('md5', $md5Hash)->first();
+                $result = $request->image->storeOnCloudinary('voltus');
 
-                if ($similarImage) {
-                    $person->images()->save($similarImage);
-                } else {
-                    $result = $request->image->storeOnCloudinary('voltus');
+                $image = new Image;
+                $image->uuid = Str::uuid();
+                $image->image_url = $result->getPath();
+                $image->image_url_secure =  $result->getSecurePath();
+                $image->size = $result->getReadableSize();
+                $image->filetype = $result->getFileType();
+                $image->originalFilename = $result->getOriginalFileName();
+                $image->publicId = $result->getPublicId();
+                $image->extension = $result->getExtension();
+                $image->width = $result->getWidth();
+                $image->height = $result->getHeight();
+                $image->timeUploaded = $result->getTimeUploaded();
+                $image->md5 = $md5Hash;
 
-                    $image = new Image;
-                    $image->uuid = Str::uuid();
-                    $image->image_url = $result->getPath();
-                    $image->image_url_secure =  $result->getSecurePath();
-                    $image->size = $result->getReadableSize();
-                    $image->filetype = $result->getFileType();
-                    $image->originalFilename = $result->getOriginalFileName();
-                    $image->publicId = $result->getPublicId();
-                    $image->extension = $result->getExtension();
-                    $image->width = $result->getWidth();
-                    $image->height = $result->getHeight();
-                    $image->timeUploaded = $result->getTimeUploaded();
-                    $image->md5 = $md5Hash;
+                $person->images()->save($image);
 
-                    $person->images()->save($image);
+                $facePlusRequest = FaceplusRequest::where('request_id', $data->request_id)->first();
+
+                $faceTokens = [];
+                foreach ($data->faces as $face) {
+                    $faceTokens[] = $face->face_token;
+
+                    // Save face detection data in the faces table
+                    $newFace = new Faces();
+                    $newFace->face_token = $face->face_token;
+                    $newFace->image_id = $image->id;
+                    $newFace->faceplusrequest_id = $facePlusRequest->id;
+                    $newFace->face_rectangle = json_encode($face->face_rectangle);
+                    $newFace->landmarks = $face->landmark ?? NULL;
+                    $newFace->attributes = $face->attributes ?? NULL;
+                    $newFace->person_id = $person->id;
+                    $newFace->save();
                 }
             }
-
             return response()->json([
                 'message' => 'Person and image saved successfully!',
                 'person' => $person,

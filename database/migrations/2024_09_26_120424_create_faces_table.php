@@ -21,10 +21,13 @@ return new class extends Migration
             $table->json('attributes')->nullable();
             $table->json('face_rectangle')->nullable();
             $table->json('landmarks')->nullable();
+            $table->unsignedBigInteger('person_id');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('faceplusrequest_id')->references('id')->on('faceplus_requests');
             $table->foreign('image_id')->references('id')->on('images');
+            $table->foreign('person_id')->references('id')->on('people');
         });
     }
 

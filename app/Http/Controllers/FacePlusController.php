@@ -153,19 +153,30 @@ class FacePlusController extends Controller
             // Send image to Face++ detectFace API
             $response = $faceplus->detectFace(['image_file' => $request->file('image')]);
             $data = $response->object();
+            
+            // Check for error in response
+            if (isset($data->error_message)) {
+                return response()->json([
+                    'message' => 'An error occurred while detecting the person.',
+                    'error' => $data->error_message,
+                ], 400);
+            }
+
+            // Check if any faces were detected
+            if (count($data->faces) === 0) {
+                return response()->json([
+                    'message' => 'An error occurred while detecting the person',
+                    'error' => 'No face was found in the image',
+                ], 400);
+            }
 
             $imageController = new ImageController();
             $image = $imageController->store($request, $data->image_id);
 
             $facePlusRequest = FaceplusRequest::where('request_id', $data->request_id)->first();
 
-            // Check for error in response
-            if (isset($data->error_message)) {
-                return response()->json(['error' => $data->error_message], 400);
-            }
-
-            // Step 2: Extract face tokens for all detected faces
             // Step 2: Extract face tokens and save the detected face data
+
             $faceTokens = [];
             foreach ($data->faces as $face) {
                 $faceTokens[] = $face->face_token;
@@ -179,11 +190,6 @@ class FacePlusController extends Controller
                 $newFace->landmarks = $face->landmark ?? NULL;
                 $newFace->attributes = $face->attributes ?? NULL;
                 $newFace->save();
-            }
-
-            // Check if any faces were detected
-            if (count($faceTokens) === 0) {
-                return response()->json(['message' => 'No faces detected.']);
             }
 
             // Step 3: Search for each face in the FaceSet and store results
