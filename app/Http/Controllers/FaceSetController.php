@@ -36,7 +36,6 @@ class FaceSetController extends Controller
             $response = $this->facePlusClient->createFaceset($validated);
             return response()->json($response->json(), $response->status());
         } catch (Exception $e) {
-            Log::error("Error creating faceset: " . $e->getMessage());
             return response()->json(['error' => 'Failed to create faceset'], 500);
         }
     }
@@ -135,15 +134,58 @@ class FaceSetController extends Controller
     /**
      * Delete a FaceSet.
      *
-     * @param Request $request
+     * @param String $faceset_token
      * @return \Illuminate\Http\JsonResponse
      */
-    public function delete(Request $request)
+    public function destroy(String $faceset_token)
     {
-        $options = $request->all();
-        $response = $this->facePlusClient->deleteFaceset($options);
-        return response()->json($response->json());
+        try {
+            //remove all faces from faceset first
+            $options = [
+                'faceset_token' => $faceset_token,
+                'face_tokens' => 'RemoveAllFaceTokens'
+            ];
+            $response = $this->facePlusClient->removeFaceset($options);
+
+            if (isset($response['error_message'])) {
+                return response()->json([
+                    'message' => 'Failed to delete faceset',
+                    'error' => $response['error_message'],
+                ], 400);
+            }
+
+
+            // Prepare the options array for the API call
+            $options = ['faceset_token' => $faceset_token];
+
+            // Make the API call to delete the FaceSet using the client
+            $response = $this->facePlusClient->deleteFaceset($options);
+
+            // Handle the Face++ API response
+            if (isset($response['error_message'])) {
+                return response()->json([
+                    'message' => 'Failed to delete faceset',
+                    'error' => $response['error_message'],
+                ], 400);
+            }
+
+            // If deletion is successful, return a success response
+            return response()->json([
+                'message' => 'Faceset deleted successfully',
+                'faceset_token' => $faceset_token, // Optionally return the token of the deleted FaceSet
+            ], 200);
+        } catch (Exception $e) {
+            // Log the exception message for debugging purposes (optional)
+            Log::error('Faceset deletion error: ' . $e->getMessage());
+
+            // Return a 500 response for any unexpected server-side error
+            return response()->json([
+                'mesage' => 'An internal error occurred while attempting to delete the faceset.',
+                'error' => $e->getMessage(), // Optionally include the exception message
+            ], 500);
+        }
     }
+
 
     /**
      * Add faces to a FaceSet.
