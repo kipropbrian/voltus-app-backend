@@ -22,6 +22,7 @@ class PersonSeeder extends Seeder
             'email' => 'william.ruto@example.go.ke',
             'about' =>  "5th president of Kenya",
             'gender' => "male",
+            'country' => "Kenya",
             'created_at' => now()
         ]);
 
@@ -31,6 +32,7 @@ class PersonSeeder extends Seeder
             'email' => 'uhuru.kenyatta@kenya.go.ke',
             'about' =>  "4th president of Kenya",
             'gender' => "male",
+            'country' => "Kenya",
             'created_at' => now()
         ]);
 
@@ -40,6 +42,7 @@ class PersonSeeder extends Seeder
             'email' => 'mwai.kibaki@kenya.go.ke',
             'about' =>  "3th president of Kenya",
             'gender' => "male",
+            'country' => "Kenya",
             'created_at' => now()
         ]);
 
@@ -49,6 +52,7 @@ class PersonSeeder extends Seeder
             'email' => 'daniel.moi@kenya.go.ke',
             'about' =>  "2nd president of Kenya",
             'gender' => "male",
+            'country' => "Kenya",
             'created_at' => now()
         ]);
 
@@ -58,6 +62,7 @@ class PersonSeeder extends Seeder
             'email' => 'jomo.kenyatta@kenya.go.ke',
             'about' =>  "1st president of Kenya",
             'gender' => "male",
+            'country' => "Kenya",
             'created_at' => now()
         ]);
     }

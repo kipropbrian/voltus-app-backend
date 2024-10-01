@@ -27,7 +27,6 @@ return new class extends Migration
             $table->string('height');
             $table->string('timeUploaded');
             $table->foreignId('person_id')->nullable()->constrained();
-            $table->boolean('detected')->default(0);
             $table->string('faceplusimage_id')->nullable();
             $table->string('md5');
             $table->timestamps();

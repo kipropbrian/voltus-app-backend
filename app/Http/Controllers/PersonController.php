@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\FacePlusClient;
 use App\Models\FaceplusRequest;
 use App\Models\Faces;
+use App\Models\Faceset;
 
 class PersonController extends Controller
 {
@@ -68,7 +69,9 @@ class PersonController extends Controller
             //store file on cloudinary
             if ($request->hasFile('image')) {
 
-                $response = $this->facePlusClient->detectFace(['image_file' => $request->file('image')]);
+                $response = $this->facePlusClient->detectFace([
+                    'image_file' => $request->file('image')
+                ]);
                 $data = $response->object();
 
                 if (count($data->faces) > 1) {
@@ -76,6 +79,37 @@ class PersonController extends Controller
                         'message' => 'An error occurred while saving the person and image.',
                         'error' => 'The image contains multiple faces',
                     ], 400);
+                }
+
+                //set a user id for the facetoken
+                $response = $this->facePlusClient->setUserIdFace([
+                    'face_token' => $data->faces[0]->face_token,
+                    'user_id' => $person->uuid,
+                ]);
+                $setUIDresp = $response->object();
+
+                if (isset($setUIDresp->error_message)) {
+                    return response()->json([
+                        'message' => 'There was in issue with the set request',
+                        'error' => $setUIDresp->error_message,
+                    ], 500);
+                }
+
+                //add face to faceset so that we can track it. 
+                $faceSet = Faceset::where('status', 'active')->first();
+                $response = $this->facePlusClient->addFaceset(
+                    [
+                        'faceset_token' => $faceSet->faceset_token,
+                        'face_tokens' => $data->faces[0]->face_token
+                    ]
+                );
+                $addFace = $response->object();
+
+                if (isset($addFace->error_message)) {
+                    return response()->json([
+                        'message' => 'There was in issue with the add face request',
+                        'error' => $addFace->error_message,
+                    ], 500);
                 }
 
                 $md5Hash = md5_file($request->file('image')->getRealPath());
