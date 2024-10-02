@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Models\Face;
+use App\Models\Person;
 use App\FacePlusClient;
+use App\Models\Faceset;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -221,6 +223,78 @@ class FaceSetController extends Controller
                 'error' => $e->getMessage(), // Optionally include the exception message
             ], 500);
         }
+    }
+
+    /**
+     * Add faces to a FaceSet.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function syncFace(Request $request)
+    {
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'personId' => 'integer',
+            'face_token' => 'string|required',
+        ]);
+
+        // Retrieve the person using the personId
+        $person = Person::find($validated['personId']);
+
+        if (!$person) {
+            return response()->json([
+                'message' => 'Person not found',
+            ], 404);
+        }
+
+        // Call the FacePlus API to associate the face with the person (set user_id)
+        $response = $this->facePlusClient->setUserIdFace([
+            'face_token' => $validated['face_token'],
+            'user_id' => $person->uuid,
+        ]); // Use the person's UUID as the user_id
+
+        $data = $response->object();
+
+        // Handle errors from the setUserIdFace API call
+        if (isset($data->error_message)) {
+            Log::channel('stderr')->info($data->error_message);
+            return response()->json([
+                'message' => 'There was an issue with the set user ID request',
+                'error' => $data->error_message,
+            ], 500);
+        }
+
+        // Retrieve the active FaceSet
+        $faceSet = Faceset::where('status', 'active')->first();
+
+        if (!$faceSet) {
+            return response()->json([
+                'message' => 'No active FaceSet found',
+            ], 404);
+        }
+
+        // Add the face to the FaceSet using the FacePlus API
+        $response = $this->facePlusClient->addFaceset([
+            'faceset_token' => $faceSet->faceset_token,
+            'face_tokens' => $validated['face_token'],
+        ]);
+
+        $addFace = $response->object();
+
+        // Handle errors from the addFaceset API call
+        if (isset($addFace->error_message)) {
+            return response()->json([
+                'message' => 'There was an issue with the add face request',
+                'error' => $addFace->error_message,
+            ], 500);
+        }
+
+        // Return a successful JSON response
+        return response()->json([
+            'message' => 'Face successfully added to FaceSet',
+            'data' => $addFace,
+        ]);
     }
 
 

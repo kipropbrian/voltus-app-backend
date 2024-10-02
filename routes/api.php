@@ -48,6 +48,8 @@ Route::prefix('faceset')->group(function () {
 
     // Add faces to a faceset by outer_id
     Route::post('/{outer_id}/add-face', [FaceSetController::class, 'addFace'])->name('faceset.addFace');
+    
+    Route::post('/sync-face', [FaceSetController::class, 'syncFace'])->name('faceset.syncFace');
 
     // Remove faces from a faceset by outer_id
     Route::post('/{outer_id}/remove-face', [FaceSetController::class, 'removeFace'])->name('faceset.removeFace');
