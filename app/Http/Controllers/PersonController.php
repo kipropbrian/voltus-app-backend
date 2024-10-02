@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\FacePlusClient;
 use App\Models\FaceplusRequest;
-use App\Models\Faces;
+use App\Models\Face;
 use App\Models\Faceset;
 
 class PersonController extends Controller
@@ -139,7 +139,7 @@ class PersonController extends Controller
                     $faceTokens[] = $face->face_token;
 
                     // Save face detection data in the faces table
-                    $newFace = new Faces();
+                    $newFace = new Face();
                     $newFace->face_token = $face->face_token;
                     $newFace->image_id = $image->id;
                     $newFace->faceplusrequest_id = $facePlusRequest->id;

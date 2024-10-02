@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\Face;
 use App\FacePlusClient;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -68,13 +69,49 @@ class FaceSetController extends Controller
     {
         $options = ['outer_id' => $outer_id];
         try {
+            // Fetch details of the faceset from FacePlus API
             $response = $this->facePlusClient->getDetailFaceset($options);
-            return response()->json($response->json(), $response->status());
+
+            // Get facetokens from the response
+            $facetokens = $response->json()['face_tokens'] ?? [];
+
+            if (empty($facetokens)) {
+                return response()->json([
+                    'faceset' => $response->json(),
+                    'faces' => [],
+                ], 200);
+            }
+
+            // Fetch faces with related person and image from the database based on the face tokens
+            $faces = Face::with(['person', 'image'])
+                ->whereIn('face_token', $facetokens)
+                ->get();
+
+            // Transform data to include person and image information
+            $facesData = $faces->map(function ($face) {
+                return [
+                    'face_token' => $face->face_token,
+                    'person' => $face->person ? [
+                        'id' => $face->person->id,
+                        'name' => $face->person->name,
+                    ] : null,
+                    'image' => $face->image ? [
+                        'id' => $face->image->id,
+                        'url' => $face->image->transformed_url,
+                    ] : null,
+                ];
+            });
+
+            return response()->json([
+                'faceset' => $response->json(),
+                'faces' => $facesData,
+            ], 200);
         } catch (Exception $e) {
             Log::error("Error showing faceset: " . $e->getMessage());
             return response()->json(['error' => 'Failed to retrieve faceset details'], 500);
         }
     }
+
 
     /**
      * Update a faceset
@@ -211,5 +248,45 @@ class FaceSetController extends Controller
         $options = $request->all();
         $response = $this->facePlusClient->removeFaceset($options);
         return response()->json($response->json());
+    }
+
+    /**
+     * Remove all faces from FaceSet.
+     *
+     * @param String faceset_token
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function removeAllFaces(String $faceset_token)
+    {
+        try {
+            //remove all faces from faceset first
+            $options = [
+                'faceset_token' => $faceset_token,
+                'face_tokens' => 'RemoveAllFaceTokens'
+            ];
+            $response = $this->facePlusClient->removeFaceset($options);
+
+            if (isset($response['error_message'])) {
+                return response()->json([
+                    'message' => 'Failed to delete faceset',
+                    'error' => $response['error_message'],
+                ], 400);
+            }
+
+            // If deletion is successful, return a success response
+            return response()->json([
+                'message' => 'All Faces deleted successfully',
+                'faceset_token' => $faceset_token, // Optionally return the token of the deleted FaceSet
+            ], 200);
+        } catch (Exception $e) {
+            // Log the exception message for debugging purposes (optional)
+            Log::error('Faceset deletion error: ' . $e->getMessage());
+
+            // Return a 500 response for any unexpected server-side error
+            return response()->json([
+                'mesage' => 'An internal error occurred while attempting to delete the faceset.',
+                'error' => $e->getMessage(), // Optionally include the exception message
+            ], 500);
+        }
     }
 }

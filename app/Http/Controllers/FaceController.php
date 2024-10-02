@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Models\Faces;
+use App\Models\Face;
 
-class FacesController extends Controller
+class FaceController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,7 +35,7 @@ class FacesController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Faces $faces)
+    public function show(Face $face)
     {
         //
     }
@@ -43,7 +43,7 @@ class FacesController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Faces $faces)
+    public function edit(Face $face)
     {
         //
     }
@@ -51,7 +51,7 @@ class FacesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Faces $faces)
+    public function update(Request $request, Face $face)
     {
         //
     }
@@ -59,7 +59,7 @@ class FacesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Faces $faces)
+    public function destroy(Face $face)
     {
         //
     }

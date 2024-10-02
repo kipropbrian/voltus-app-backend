@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use App\FacePlusClient;
 use App\Models\FaceplusRequest;
-use App\Models\Faces;
+use App\Models\Face;
 use App\Models\Faceset;
 use App\Models\Person;
 use Illuminate\Http\Request;
@@ -153,7 +153,7 @@ class FacePlusController extends Controller
             // Send image to Face++ detectFace API
             $response = $faceplus->detectFace(['image_file' => $request->file('image')]);
             $data = $response->object();
-            
+
             // Check for error in response
             if (isset($data->error_message)) {
                 return response()->json([
@@ -182,7 +182,7 @@ class FacePlusController extends Controller
                 $faceTokens[] = $face->face_token;
 
                 // Save face detection data in the faces table
-                $newFace = new Faces();
+                $newFace = new Face();
                 $newFace->face_token = $face->face_token;
                 $newFace->image_id = $image->id;
                 $newFace->faceplusrequest_id = $facePlusRequest->id;

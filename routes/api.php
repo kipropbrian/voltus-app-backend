@@ -43,12 +43,15 @@ Route::prefix('faceset')->group(function () {
     // Update a faceset by outer_id
     Route::put('/{outer_id}', [FaceSetController::class, 'update'])->name('faceset.update');
 
-    // Delete a faceset by outer_id
-    Route::delete('/{outer_id}', [FaceSetController::class, 'destroy'])->name('faceset.destroy');
+    // Delete a faceset by faceset_id
+    Route::delete('/{faceset_id}', [FaceSetController::class, 'destroy'])->name('faceset.destroy');
 
     // Add faces to a faceset by outer_id
     Route::post('/{outer_id}/add-face', [FaceSetController::class, 'addFace'])->name('faceset.addFace');
 
     // Remove faces from a faceset by outer_id
     Route::post('/{outer_id}/remove-face', [FaceSetController::class, 'removeFace'])->name('faceset.removeFace');
+
+    // Remove all faces from a faceset by faceset_id
+    Route::delete('/{faceset_id}/remove-all-faces', [FaceSetController::class, 'removeAllFaces'])->name('faceset.removeAllFaces');
 });
