@@ -219,12 +219,25 @@ class FacePlusController extends Controller
                 // Fetch persons from the database
                 $persons = Person::whereIn('uuid', $personUuids)->with('latestImage')->get();
 
+                // Get the confidence level from the search result
+                $confidence = isset($searchData->results[0]) ? $searchData->results[0]->confidence : null;
+
+                // If confidence is below 85, treat the result as unknown
+                //TODO: move 85 to constant somewhere
+                if ($confidence !== null && $confidence < 85) {
+                    $persons = null;
+                    $confidence = null;
+                }
+
                 // Combine face data and search results into a single object
                 $searchResults[] = [
                     'face_token' => $faceToken,
                     'person_data' => $persons,
-                    'confidence' => isset($searchData->results[0]) ? $searchData->results[0]->confidence : null,
-                    'face_rectangle' => $data->faces[array_search($faceToken, array_column($data->faces, 'face_token'))]->face_rectangle,
+                    'confidence' => $confidence,
+                    'face_rectangle' => $data->faces[array_search(
+                        $faceToken,
+                        array_column($data->faces, 'face_token')
+                    )]->face_rectangle,
                 ];
             }
 
