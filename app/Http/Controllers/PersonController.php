@@ -58,8 +58,8 @@ class PersonController extends Controller
                 'name' => 'required|max:255|unique:people,name',
                 'email' => 'nullable',
                 'gender' => 'required',
-                'about' => 'required|max:255',
-                'image' => 'nullable|mimes:jpg,jpeg,png|max:2048'
+                'about' => 'required|max:65535',
+                'image' => 'mimes:jpg,jpeg,png|max:2048'
             ]);
 
             $person = new Person($validated);
@@ -69,86 +69,26 @@ class PersonController extends Controller
             //store file on cloudinary
             if ($request->hasFile('image')) {
 
-                $response = $this->facePlusClient->detectFace([
-                    'image_file' => $request->file('image')
-                ]);
-                $data = $response->object();
+                $faceData = $this->detectFaceInImage($request->file('image'));
 
-                if (count($data->faces) > 1) {
+                if (count($faceData->faces) > 1) {
                     return response()->json([
                         'message' => 'An error occurred while saving the person and image.',
                         'error' => 'The image contains multiple faces',
                     ], 400);
                 }
 
-                //set a user id for the facetoken
-                $response = $this->facePlusClient->setUserIdFace([
-                    'face_token' => $data->faces[0]->face_token,
-                    'user_id' => $person->uuid,
-                ]);
-                $setUIDresp = $response->object();
+                // Assign a user ID to the face token
+                $this->setUserIdForFace($person, $faceData->faces[0]->face_token);
 
-                if (isset($setUIDresp->error_message)) {
-                    return response()->json([
-                        'message' => 'There was in issue with the set request',
-                        'error' => $setUIDresp->error_message,
-                    ], 500);
-                }
+                // Add the face to the active faceset
+                $this->addFaceToFaceset($faceData->faces[0]->face_token);
 
-                //add face to faceset so that we can track it. 
-                $faceSet = Faceset::where('status', 'active')->first();
-                $response = $this->facePlusClient->addFaceset(
-                    [
-                        'faceset_token' => $faceSet->faceset_token,
-                        'face_tokens' => $data->faces[0]->face_token
-                    ]
-                );
-                $addFace = $response->object();
+                // Store image on Cloudinary and save in the database
+                $image = $this->storeImage($request->file('image'), $person);
 
-                if (isset($addFace->error_message)) {
-                    return response()->json([
-                        'message' => 'There was in issue with the add face request',
-                        'error' => $addFace->error_message,
-                    ], 500);
-                }
-
-                $md5Hash = md5_file($request->file('image')->getRealPath());
-
-                $result = $request->image->storeOnCloudinary('voltus');
-
-                $image = new Image;
-                $image->uuid = Str::uuid();
-                $image->image_url = $result->getPath();
-                $image->image_url_secure =  $result->getSecurePath();
-                $image->size = $result->getReadableSize();
-                $image->filetype = $result->getFileType();
-                $image->originalFilename = $result->getOriginalFileName();
-                $image->publicId = $result->getPublicId();
-                $image->extension = $result->getExtension();
-                $image->width = $result->getWidth();
-                $image->height = $result->getHeight();
-                $image->timeUploaded = $result->getTimeUploaded();
-                $image->md5 = $md5Hash;
-
-                $person->images()->save($image);
-
-                $facePlusRequest = FaceplusRequest::where('request_id', $data->request_id)->first();
-
-                $faceTokens = [];
-                foreach ($data->faces as $face) {
-                    $faceTokens[] = $face->face_token;
-
-                    // Save face detection data in the faces table
-                    $newFace = new Face();
-                    $newFace->face_token = $face->face_token;
-                    $newFace->image_id = $image->id;
-                    $newFace->faceplusrequest_id = $facePlusRequest->id;
-                    $newFace->face_rectangle = json_encode($face->face_rectangle);
-                    $newFace->landmarks = $face->landmark ?? NULL;
-                    $newFace->attributes = $face->attributes ?? NULL;
-                    $newFace->person_id = $person->id;
-                    $newFace->save();
-                }
+                // Save face data to the database
+                $this->saveFaceData($faceData, $image, $person);
             }
             return response()->json([
                 'message' => 'Person and image saved successfully!',
@@ -202,40 +142,40 @@ class PersonController extends Controller
             $validated = $request->validate([
                 'name' => 'required|max:255',
                 'gender' => 'required',
-                'about' => 'required|max:255',
+                'about' => 'required|max:65535',
                 'image' => 'nullable|mimes:jpg,jpeg,png|max:2048'
             ]);
 
-            //store file on cloudinary
             if ($request->hasFile('image')) {
-                $result = $request->image->storeOnCloudinary('voltus');
-                Log::channel('stderr')->info('Image ' . $result->getFileName() . ' saved on cloudinary! on URL ' . $result->getPath());
+                $faceData = $this->detectFaceInImage($request->file('image'));
 
-                $image = new Image;
-                $image->uuid = Str::uuid();
-                $image->image_url = $result->getPath();
-                $image->image_url_secure =  $result->getSecurePath();
-                $image->size = $result->getReadableSize();
-                $image->filetype = $result->getFileType();
-                $image->originalFilename = $result->getOriginalFileName();
-                $image->publicId = $result->getPublicId();
-                $image->extension = $result->getExtension();
-                $image->width = $result->getWidth();
-                $image->height = $result->getHeight();
-                $image->timeUploaded = $result->getTimeUploaded();
+                if (count($faceData->faces) > 1) {
+                    return response()->json([
+                        'message' => 'An error occurred while saving the person and image.',
+                        'error' => 'The image contains multiple faces',
+                    ], 400);
+                }
 
-                $person->images()->save($image);
-                Log::channel('stderr')->info('Image saved and attached to person');
+                // Assign a user ID to the face token
+                $this->setUserIdForFace($person, $faceData->faces[0]->face_token);
+
+                // Add the face to the active faceset
+                $this->addFaceToFaceset($faceData->faces[0]->face_token);
+
+                // Store image on Cloudinary and save in the database
+                $image = $this->storeImage($request->file('image'), $person);
+
+                // Save face data to the database
+                $this->saveFaceData($faceData, $image, $person);
             }
 
             $person->update($validated);
-            Log::info('Person info updated' . $person);
 
             return response()->json([
                 'message' => 'Person updated successfully!',
                 'person' => $person,
                 'image' => $image ?? null,
-            ], 201);
+            ], 200);
         } catch (\Exception $e) {
             Log::error('Error creating person: ' . $e->getMessage());
 
@@ -276,5 +216,112 @@ class PersonController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Detect face in the image using the FacePlus API.
+     *
+     * @param  \Illuminate\Http\UploadedFile  $image
+     * @return object
+     */
+    protected function detectFaceInImage($image)
+    {
+        $response = $this->facePlusClient->detectFace(['image_file' => $image]);
+        return $response->object();
+    }
+
+    /**
+     * Set user ID for the face token using the FacePlus API.
+     *
+     * @param  \App\Models\Person  $person
+     * @param  string  $faceToken
+     */
+    protected function setUserIdForFace(Person $person, string $faceToken)
+    {
+        $response = $this->facePlusClient->setUserIdFace([
+            'face_token' => $faceToken,
+            'user_id' => $person->uuid,
+        ]);
+        $result = $response->object();
+
+        if (isset($result->error_message)) {
+            throw new \Exception('Error setting user ID for face: ' . $result->error_message);
+        }
+    }
+
+    /**
+     * Add face to the active faceset.
+     *
+     * @param  string  $faceToken
+     */
+    protected function addFaceToFaceset(string $faceToken)
+    {
+        $faceSet = Faceset::where('status', 'active')->first();
+        $response = $this->facePlusClient->addFaceset([
+            'faceset_token' => $faceSet->faceset_token,
+            'face_tokens' => $faceToken,
+        ]);
+        $result = $response->object();
+
+        if (isset($result->error_message)) {
+            throw new \Exception('Error adding face to faceset: ' . $result->error_message);
+        }
+    }
+
+    /**
+     * Save face data from FacePlus API response to the database.
+     *
+     * @param  object  $faceData
+     * @param  \App\Models\Image  $image
+     * @param  \App\Models\Person  $person
+     */
+    protected function saveFaceData($faceData, Image $image, Person $person)
+    {
+        $facePlusRequest = FaceplusRequest::where('request_id', $faceData->request_id)->first();
+        foreach ($faceData->faces as $faceDetails) {
+
+            $face = new Face();
+            $face->face_token = $faceDetails->face_token;
+            $face->image_id = $image->id;
+            $face->faceplusrequest_id = $facePlusRequest->id;
+            $face->face_rectangle = json_encode($faceDetails->face_rectangle);
+            $face->landmarks = $faceDetails->landmark ?? null;
+            $face->attributes = $faceDetails->attributes ?? null;
+            $face->person_id = $person->id;
+
+            $face->save();
+        }
+    }
+
+    /**
+     * Store the uploaded image on Cloudinary and save it in the database.
+     *
+     * @param  \Illuminate\Http\UploadedFile  $imageFile
+     * @param  \App\Models\Person  $person
+     * @return \App\Models\Image
+     */
+    protected function storeImage($imageFile, Person $person)
+    {
+        $md5Hash = md5_file($imageFile->getRealPath());
+        $result = $imageFile->storeOnCloudinary('voltus');
+
+        $image = new Image();
+        $image->uuid = Str::uuid();
+        $image->image_url = $result->getPath();
+        $image->image_url_secure = $result->getSecurePath();
+        $image->size = $result->getReadableSize();
+        $image->filetype = $result->getFileType();
+        $image->originalFilename = $result->getOriginalFileName();
+        $image->publicId = $result->getPublicId();
+        $image->extension = $result->getExtension();
+        $image->width = $result->getWidth();
+        $image->height = $result->getHeight();
+        $image->timeUploaded = $result->getTimeUploaded();
+        $image->md5 = $md5Hash;
+
+        // Save the image associated with the person
+        $person->images()->save($image);
+
+        return $image;
     }
 }
