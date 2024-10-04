@@ -87,22 +87,27 @@ class FaceSetController extends Controller
             // Fetch faces with related person and image from the database based on the face tokens
             $faces = Face::with(['person', 'image'])
                 ->whereIn('face_token', $facetokens)
-                ->get();
+                ->get()
+                ->keyBy('face_token'); // Key the collection by face_token for easier lookup
 
             // Transform data to include person and image information
-            $facesData = $faces->map(function ($face) {
+            $facesData = collect($facetokens)->map(function ($token) use ($faces) {
+                // Check if the face_token exists in the $faces collection
+                $face = $faces->get($token);
+
                 return [
-                    'face_token' => $face->face_token,
-                    'person' => $face->person ? [
+                    'face_token' => $token, // Always include the face token
+                    'person' => $face && $face->person ? [
                         'id' => $face->person->id,
                         'name' => $face->person->name,
                     ] : null,
-                    'image' => $face->image ? [
+                    'image' => $face && $face->image ? [
                         'id' => $face->image->id,
                         'url' => $face->image->transformed_url,
                     ] : null,
                 ];
             });
+
 
             return response()->json([
                 'faceset' => $response->json(),
@@ -317,11 +322,36 @@ class FaceSetController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function removeFace(Request $request)
+    public function removeFace(Request $request, string $outer_id)
     {
-        $options = $request->all();
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'face_token' => 'string|required',
+        ]);
+
+        $options = [
+            'outer_id' => $outer_id,
+            'face_tokens' => $validated['face_token']
+        ];
+
+        // Call FacePlus API to remove the face token from the FaceSet
         $response = $this->facePlusClient->removeFaceset($options);
-        return response()->json($response->json());
+
+        if (isset($response['error_message'])) {
+            return response()->json([
+                'message' => 'Failed to remove face from faceset',
+                'error' => $response['error_message'],
+            ], 400);
+        }
+
+        // 4. Find and delete the face from the `faces` table
+        $face = Face::where('face_token', $validated['face_token'])->first();
+
+        if ($face) {
+            $face->delete(); // Delete the face from the database
+        }
+
+        return response()->json(['message' => 'Face removed successfully.'], 200);
     }
 
     /**
