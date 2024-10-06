@@ -295,6 +295,11 @@ class FaceSetController extends Controller
             ], 500);
         }
 
+        $face = Face::where('face_token', $validated['face_token'])->first();
+        if ($face) {
+            $face->person_id = $person->id;
+        }
+
         // Return a successful JSON response
         return response()->json([
             'message' => 'Face successfully added to FaceSet',
