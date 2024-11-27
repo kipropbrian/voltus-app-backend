@@ -11,9 +11,12 @@ use Exception;
 use App\Models\FaceplusRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Traits\QueueableFacePlusRequest;
 
 class FacePlusClient
 {
+    use QueueableFacePlusRequest;
+
     // Server URL in china is api-cn.faceplusplus.com, and in others is api-us.faceplusplus.com
     protected $host;
 
@@ -138,6 +141,15 @@ class FacePlusClient
     public function addFaceset($options)
     {
         $path = '/facepp/v3/faceset/addface';
+        return $this->request($path, $options);
+    }
+
+     /**
+     * add one or more face to existing faceset async
+     */
+    public function asyncAddFaceToFaceset($options)
+    {
+        $path = '/facepp/v3/faceset/asaddface';
         return $this->request($path, $options);
     }
 

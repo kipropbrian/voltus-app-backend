@@ -317,7 +317,7 @@ class FaceSetController extends Controller
     public function addFace(Request $request)
     {
         $options = $request->all();
-        $response = $this->facePlusClient->addFaceset($options);
+        $response = $this->facePlusClient->asyncAddFaceToFaceset($options);
         return response()->json($response->json());
     }
 
