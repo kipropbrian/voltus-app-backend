@@ -12,6 +12,7 @@ use App\Models\FaceplusRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Traits\QueueableFacePlusRequest;
+use Illuminate\Http\Client\RequestException;
 
 class FacePlusClient
 {
@@ -25,6 +26,8 @@ class FacePlusClient
 
     // the request secret
     protected $apiSecret;
+    protected $maxRetries = 3;
+    protected $retryDelay = 1000; // milliseconds
 
     /**
      * Constructor
@@ -47,6 +50,64 @@ class FacePlusClient
         $this->apiSecret = env('FACEPLUS_API_SECRET');
     }
 
+    /**
+     * Makes an HTTP request to the FacePlus API with retry capability
+     *
+     * This method handles the actual HTTP request to the FacePlus API, including retry logic
+     * with exponential backoff. It will attempt the request up to the specified maximum
+     * number of retries before giving up.
+     *
+     * @param \Illuminate\Http\Client\PendingRequest $httpRequest The prepared HTTP request object
+     * @param string $url The full URL to make the request to
+     * @param array $allOptions Array of options to be sent with the request, including credentials
+     * @param int $attempt Current attempt number, starting at 1
+     * 
+     * @throws \Illuminate\Http\Client\RequestException When the request fails and max retries are exceeded
+     * @return \Illuminate\Http\Client\Response Returns the HTTP response object
+     * 
+     * 
+     * The method implements exponential backoff for retries:
+     * - 1st retry: waits retryDelay milliseconds
+     * - 2nd retry: waits retryDelay * 2 milliseconds
+     * - 3rd retry: waits retryDelay * 4 milliseconds
+     * 
+     * If all retries fail, returns a response with error details and 500 status code
+     */
+    protected function makeRequest($httpRequest, $url, $allOptions, $attempt = 1)
+    {
+        try {
+            $response = $httpRequest->post($url, $allOptions);
+            
+            // Check if the response was successful
+            if ($response->successful()) {
+                return $response;
+            }
+            
+            // If we get here, the request wasn't successful but didn't throw an exception
+            throw new RequestException($response);
+        } catch (Exception $e) {
+            Log::warning("FacePlus API request failed (attempt {$attempt} of {$this->maxRetries})", [
+                'url' => $url,
+                'error' => $e->getMessage(),
+                'attempt' => $attempt
+            ]);
+
+            // If we haven't exceeded max retries, try again
+            if ($attempt < $this->maxRetries) {
+                // Exponential backoff: wait longer between each retry
+                $delay = $this->retryDelay * pow(2, $attempt - 1);
+                usleep($delay * 1000); // Convert to microseconds
+                
+                return $this->makeRequest($httpRequest, $url, $allOptions, $attempt + 1);
+            }
+
+            // If we've exhausted all retries, return a failed response
+            return Http::response([
+                'error' => 'Max retries exceeded',
+                'original_error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     function request($path, $options)
     {
@@ -56,14 +117,12 @@ class FacePlusClient
         ];
 
         $url = $this->generateUrl($path);
-
         $allOptions = array_merge($creds, $options);
 
-        // Check if 'image_file' is an instance of UploadedFile and needs to be attached
+        // Prepare the HTTP request
         if (isset($options['image_file']) && $options['image_file'] instanceof \Illuminate\Http\UploadedFile) {
-            //Get file from request
             $imageFile = $options['image_file'];
-            unset($allOptions['image_file']); //removing image from image_file
+            unset($allOptions['image_file']);
 
             $httpRequest = Http::acceptJson()->attach(
                 'image_file',
@@ -71,25 +130,31 @@ class FacePlusClient
                 $imageFile->getClientOriginalName()
             );
         } else {
-            //Send post request to faceplus host
             $httpRequest = Http::acceptJson()->asForm();
         }
-        $response = $httpRequest->post($url, $allOptions);
 
-        // Log the request to the facepp_requests table
+        // Make the request with retry logic
+        $response = $this->makeRequest($httpRequest, $url, $allOptions);
+
+        // Create FaceplusRequest record regardless of success/failure
         $facePlusData = new FaceplusRequest;
-
-        $data = $response->object();
-
         $facePlusData->endpoint = $path;
         $facePlusData->request_data = json_encode($options);
         $facePlusData->response_data = json_encode($response->json());
-        $facePlusData->request_id = $data->request_id;
         $facePlusData->status_code = $response->status();
+
+        // If the response was successful and contains a request_id, store it
+        if ($response->successful() && isset($response->object()->request_id)) {
+            $facePlusData->request_id = $response->object()->request_id;
+        }
 
         $facePlusData->save();
 
-        $data->faceplusrequest_id = $facePlusData->id;
+        // Add the faceplusrequest_id to the response data
+        $responseData = $response->object();
+        if (is_object($responseData)) {
+            $responseData->faceplusrequest_id = $facePlusData->id;
+        }
 
         return $response;
     }
