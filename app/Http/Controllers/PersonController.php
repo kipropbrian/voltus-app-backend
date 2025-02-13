@@ -26,12 +26,21 @@ class PersonController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //Get all
-        $people = Person::with('images')->get();
+         // Get pagination parameters from the request
+        $page = $request->input('page', 1);
+        $pageSize = $request->input('pageSize', 10);
 
-        return response()->json(['people' => $people]);
+        // Paginate the results
+        $people = Person::with('images')->paginate($pageSize, ['*'], 'page', $page);
+
+        return response()->json([
+            'people' => $people->items(),
+            'total' => $people->total(),
+            'currentPage' => $people->currentPage(),
+            'pageSize' => $people->perPage(),
+        ]);
     }
 
     /**
@@ -168,7 +177,7 @@ class PersonController extends Controller
                 // Save face data to the database
                 $this->saveFaceData($faceData, $image, $person);
             }
-
+ 
             $person->update($validated);
 
             return response()->json([
