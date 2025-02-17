@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\FaceSetController;
+use App\Http\Controllers\Auth\GoogleLoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +29,8 @@ Route::post('face/detect', [FacePlusController::class, 'facePlusDetect']);
 Route::post('face/fullsearch', [FacePlusController::class, 'detectAndSearchFaces']);
 
 Route::post('image/sync', [ImageController::class, 'syncImage']);
+
+Route::post('/auth/google', [GoogleLoginController::class, 'handleGoogleCallback']);
 
 // Grouping all routes related to facesets under the /api/facesets path
 Route::prefix('faceset')->group(function () {
