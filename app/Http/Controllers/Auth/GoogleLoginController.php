@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class GoogleLoginController extends Controller
@@ -16,17 +17,18 @@ class GoogleLoginController extends Controller
         try {
             // Validate the incoming request
             $request->validate([
-                'credential' => 'required|string'
+                'access_token' => 'required|string'
             ]);
 
             // Get the ID token from the request
-            $token = $request->credential;
+            $token = $request->access_token;
 
             // Get the Google user using the token
             $googleUser = Socialite::driver('google')
                 ->stateless()
                 ->userFromToken($token);
             
+            Log::info('Google', $googleUser);
             // Find or create the user
             $user = User::updateOrCreate(
                 ['email' => $googleUser->email],
