@@ -28,7 +28,6 @@ class GoogleLoginController extends Controller
                 ->stateless()
                 ->userFromToken($token);
             
-            Log::info('Google', $googleUser);
             // Find or create the user
             $user = User::updateOrCreate(
                 ['email' => $googleUser->email],
