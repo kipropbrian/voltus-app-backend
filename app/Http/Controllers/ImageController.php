@@ -6,6 +6,7 @@ use App\Models\Image;
 use App\FacePlusClient;
 use App\Models\Faceset;
 use App\Models\FaceToken;
+use App\Models\TwitterImages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -241,5 +242,52 @@ class ImageController extends Controller
 		}
 
 		throw new \Exception('No valid image provided');
+	}
+
+	public function getImagesFromMongo(Request $request)
+	{
+		// Get the images from MongoDB and Paginate them
+		$request->validate([
+			'page' => 'required|integer|min:1',
+			'limit' => 'required|integer|min:1|max:100',
+		]);
+		$page = $request->input('page');
+		$limit = $request->input('limit');
+		$offset = ($page - 1) * $limit;
+		
+		// Get the images from MongoDB and group by image_name
+		$mongoData = TwitterImages::raw(function($collection) {
+			return $collection->aggregate([
+				[
+					'$group' => [
+						'_id' => '$image_name',
+						'documents' => ['$push' => '$$ROOT'],
+						'count' => ['$sum' => 1]
+					]
+				],
+				['$sort' => ['count' => -1]],
+				['$limit' => 10]
+			]);
+		});
+		// Check if the data is empty
+		$total = TwitterImages::count();
+		if ($mongoData->isEmpty()) {
+			return response()->json(['message' => 'No images found'], 404);
+		}
+		// Calculate pagination details
+		$lastPage = ceil($total / $limit);
+		$nextPage = $page < $lastPage ? $page + 1 : null;
+		$prevPage = $page > 1 ? $page - 1 : null;
+
+		return response()->json([
+			'data' => $mongoData,
+			'pagination' => [
+				'current_page' => $page,
+				'next_page' => $nextPage,
+				'prev_page' => $prevPage,
+				'total_pages' => $lastPage,
+				'total_items' => $total,
+			],
+		]);		
 	}
 }

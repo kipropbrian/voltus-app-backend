@@ -16,6 +16,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.7",
+        "mongodb/laravel-mongodb": "^5.3",
         "opcodesio/log-viewer": "^3.11",
         "sentry/sentry-laravel": "^4.9"
     },

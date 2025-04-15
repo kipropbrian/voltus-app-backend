@@ -35,6 +35,9 @@ Route::middleware(('auth:sanctum'))->group(function () {
 
     Route::post('image/sync', [ImageController::class, 'syncImage']);
 
+    // Route to getImagesFromMongo
+    Route::get('image/getImages', [ImageController::class, 'getImagesFromMongo']);
+
     // Grouping all routes related to facesets under the /api/facesets path
     Route::prefix('faceset')->group(function () {
         // Create a new faceset
