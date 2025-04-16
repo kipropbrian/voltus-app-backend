@@ -252,11 +252,11 @@ class ImageController extends Controller
 			'limit' => 'required|integer|min:1|max:100',
 		]);
 		$page = $request->input('page');
-		$limit = $request->input('limit');
+		$limit = (int) $request->input('limit');
 		$offset = ($page - 1) * $limit;
 		
 		// Get the images from MongoDB and group by image_name
-		$mongoData = TwitterImages::raw(function($collection) {
+		$mongoData = TwitterImages::raw(function($collection) use ($limit) {
 			return $collection->aggregate([
 				[
 					'$group' => [
@@ -266,7 +266,7 @@ class ImageController extends Controller
 					]
 				],
 				['$sort' => ['count' => -1]],
-				['$limit' => 10]
+				['$limit' => $limit]
 			]);
 		});
 		// Check if the data is empty
