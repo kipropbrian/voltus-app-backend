@@ -10,6 +10,7 @@ use App\Models\TwitterImages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Junges\Kafka\Facades\Kafka;
 
 class ImageController extends Controller
 {
@@ -259,13 +260,18 @@ class ImageController extends Controller
 		$mongoData = TwitterImages::raw(function($collection) use ($limit) {
 			return $collection->aggregate([
 				[
+					'$match' => [
+						'confidence' => ['$gt' => 0.9]
+					]
+				],
+				[
 					'$group' => [
 						'_id' => '$image_name',
 						'documents' => ['$push' => '$$ROOT'],
 						'count' => ['$sum' => 1]
 					]
 				],
-				['$sort' => ['count' => -1]],
+				['$sort' => ['_id' => -1]],
 				['$limit' => $limit]
 			]);
 		});
