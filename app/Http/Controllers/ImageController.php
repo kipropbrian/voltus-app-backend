@@ -12,8 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Junges\Kafka\Facades\Kafka;
 use Junges\Kafka\Message\Message;
+use Junges\Kafka\Contracts\ConsumerMessage;
 
 class ImageController extends Controller
 {
@@ -302,6 +304,7 @@ class ImageController extends Controller
 
 	/**
 	 * Handles the image search functionality.
+	 * Uses https://laravelkafka.com/docs/v2.0/
 	 *
 	 * @param \Illuminate\Http\Request $request The HTTP request instance.
 	 *
@@ -313,24 +316,16 @@ class ImageController extends Controller
 	public function search(Request $request)
 	{
 		$request->validate(['image' => 'required|image|max:2048']);
-		
-		
-		// Retrieve requestID from headers
+
 		$requestID = Str::uuid()->toString();
-		
-		// Save image temporarily
 		$tempPath = $request->file('image')->storeAs('temp', $requestID . '.jpg');
 		$imagePath = storage_path('app/' . $tempPath);
-		
 
 		try {
-
-
-			// Publish search request
 			$data = [
 				'request_id' => $requestID,
 				'image_path' => $imagePath,
-				'reply_topic' => 'face_search_replies_' . $requestID,
+				'reply_topic' => 'face_search_responses',
 				'timestamp' => now()->toISOString()
 			];
 
@@ -338,31 +333,37 @@ class ImageController extends Controller
 				body: ['request' => Json::encode($data)],
 			);
 
-
-			$producer = Kafka::publish('localhost')->onTopic('face_search_requests')->withMessage($message);
-			$producer->send();
-			
-			// Wait for response (with timeout)
-            $startTime = time();
-            $timeout = 30; // seconds
-
-			while (time() - $startTime < $timeout) {
-				Log::info('Processing response ....');
-                if ($result = Kafka::consumer(['face_search_responses'])) {
-                    Storage::delete($tempPath);
-                    return response()->json($result);
-                }
-                sleep(1);
-            }
-
-			throw new \Exception('Search timeout');
+			Kafka::publish('localhost')
+				->onTopic('face_search_requests')
+				->withMessage($message)
+				->send();
+			return response()->json(['correlationId' => $requestID], 202);
 		} catch (\Exception $e) {
 			return response()->json(['error' => $e->getMessage()], 500);
-		} finally {
-			// Clean up temporary file
-			if (file_exists($imagePath)) {
-				unlink($imagePath);
-			}
 		}
 	}
+
+	/**
+	 * Retrieves the search results for a given correlation ID from the cache.
+	 * If results are found, they are returned as a JSON response and removed from the cache.
+	 * If no results are found, a processing status is returned with a 202 HTTP status code.
+	 *
+	 * @param \Illuminate\Http\Request $request The HTTP request instance.
+	 * @param string $correlationId The unique identifier for the search operation.
+	 * 
+	 * @return \Illuminate\Http\JsonResponse A JSON response containing the search results
+	 *                                        or a processing status.
+	 */
+    public function getSearchResults(Request $request, $correlationId)
+    {
+        $results = Cache::store('redis')->get($correlationId);
+		
+
+        if ($results) {
+            cache()->forget($correlationId); // Consume the result
+            return response()->json($results);
+        } else {
+            return response()->json(['status' => 'processing'], 202); // Still processing
+        }
+    }
 }

@@ -19,6 +19,7 @@
         "mateusjunges/laravel-kafka": "^2.5",
         "mongodb/laravel-mongodb": "^5.3",
         "opcodesio/log-viewer": "^3.11",
+        "predis/predis": "^3.0",
         "sentry/sentry-laravel": "^4.9"
     },
     "require-dev": {
