@@ -20,6 +20,7 @@ use App\Http\Controllers\AuthController;
 |
 */
 Route::post('/auth/google', [GoogleLoginController::class, 'handleGoogleCallback']);
+Route::post('image/search', [ImageController::class, 'search']);
 
 Route::middleware(('auth:sanctum'))->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);

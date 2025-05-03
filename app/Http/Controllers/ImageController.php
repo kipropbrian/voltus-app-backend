@@ -7,10 +7,13 @@ use App\FacePlusClient;
 use App\Models\Faceset;
 use App\Models\FaceToken;
 use App\Models\TwitterImages;
+use Illuminate\Database\Eloquent\Casts\Json;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Junges\Kafka\Facades\Kafka;
+use Junges\Kafka\Message\Message;
 
 class ImageController extends Controller
 {
@@ -295,5 +298,71 @@ class ImageController extends Controller
 				'total_items' => $total,
 			],
 		]);		
+	}
+
+	/**
+	 * Handles the image search functionality.
+	 *
+	 * @param \Illuminate\Http\Request $request The HTTP request instance.
+	 *
+	 * @return \Illuminate\Http\JsonResponse The JSON response containing the search result or an error message.
+	 *
+	 * @throws \Illuminate\Validation\ValidationException If the request validation fails.
+	 * @throws \Exception If the search operation times out or encounters an error.
+	 */
+	public function search(Request $request)
+	{
+		$request->validate(['image' => 'required|image|max:2048']);
+		
+		
+		// Retrieve requestID from headers
+		$requestID = Str::uuid()->toString();
+		
+		// Save image temporarily
+		$tempPath = $request->file('image')->storeAs('temp', $requestID . '.jpg');
+		$imagePath = storage_path('app/' . $tempPath);
+		
+
+		try {
+
+
+			// Publish search request
+			$data = [
+				'request_id' => $requestID,
+				'image_path' => $imagePath,
+				'reply_topic' => 'face_search_replies_' . $requestID,
+				'timestamp' => now()->toISOString()
+			];
+
+			$message = new Message(
+				body: ['request' => Json::encode($data)],
+			);
+
+
+			$producer = Kafka::publish('localhost')->onTopic('face_search_requests')->withMessage($message);
+			$producer->send();
+			
+			// Wait for response (with timeout)
+            $startTime = time();
+            $timeout = 30; // seconds
+
+			while (time() - $startTime < $timeout) {
+				Log::info('Processing response ....');
+                if ($result = Kafka::consumer(['face_search_responses'])) {
+                    Storage::delete($tempPath);
+                    return response()->json($result);
+                }
+                sleep(1);
+            }
+
+			throw new \Exception('Search timeout');
+		} catch (\Exception $e) {
+			return response()->json(['error' => $e->getMessage()], 500);
+		} finally {
+			// Clean up temporary file
+			if (file_exists($imagePath)) {
+				unlink($imagePath);
+			}
+		}
 	}
 }
