@@ -354,16 +354,18 @@ class ImageController extends Controller
 	 * @return \Illuminate\Http\JsonResponse A JSON response containing the search results
 	 *                                        or a processing status.
 	 */
-    public function getSearchResults(Request $request, $correlationId)
+    public function getSearchResults($correlationId)
     {
         $results = Cache::store('redis')->get($correlationId);
 		
-
-        if ($results) {
-            cache()->forget($correlationId); // Consume the result
-            return response()->json($results);
-        } else {
+        if ($results === null) {
             return response()->json(['status' => 'processing'], 202); // Still processing
         }
+        
+        if (empty($results)) {
+            return response()->json(['status' => 'no_results_found'], 404); // Empty results
+        }
+        
+        return response()->json($results);
     }
 }
